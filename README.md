@@ -1,5 +1,7 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
+Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). Bản APK cập nhật tên và icon: `app/build/outputs/apk/debug/KTalk-debug.apk`.
+
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
 ## Có trong bản đầu

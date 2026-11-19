@@ -2,7 +2,11 @@
 
 ## Cập nhật tên ứng dụng
 
-Theo yêu cầu người dùng, tên hiển thị trên launcher và màn hình chính đã đổi thành **KTalk**. Màn hình chính dùng chung resource `app_name`. Build lại thành công; `aapt dump badging` xác nhận `application-label:'KTalk'`. Bản cài cập nhật: `app/build/outputs/apk/debug/KTalk-debug.apk`, SHA-256 `3a7e13d2a91a31d8eabbe18ac94b4e177c4a1f2b421758b4cbb91442fa256bd1`.
+Theo yêu cầu người dùng, tên hiển thị trên launcher và màn hình chính đã đổi thành **KTalk**. Màn hình chính dùng chung resource `app_name`. Build lại thành công; `aapt dump badging` xác nhận `application-label:'KTalk'`.
+
+Biểu tượng mới dùng chữ **K** khoét trong bong bóng hội thoại trắng, nền xanh lam `#254FDB`. Có adaptive icon, round icon và monochrome cho Android 13+. Bản xem trước tại `docs/design/ktalk-icon.png` được dựng trực tiếp từ đường vector của asset. Build/lint và chữ ký APK đã kiểm tra; lint 0 lỗi / 15 cảnh báo, trong đó 3 cảnh báo mới về resource dự phòng và qualifier icon. Không chạy lại test chức năng cho thay đổi asset này.
+
+Bản cài mới nhất: `app/build/outputs/apk/debug/KTalk-debug.apk`, SHA-256 `8ab7ec4e3a1def9be7012191de1ee0daed6b0c6b76cb50d5ad06059b91754738`.
 
 Các kết quả kiểm thử đầy đủ, kích thước/SHA và ảnh bên dưới ghi lại bản đầu trước đổi tên. Lần đổi nhãn này đã kiểm tra build và nhãn trong APK, không chạy lại các test chức năng.
 

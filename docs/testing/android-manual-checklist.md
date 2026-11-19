@@ -2,9 +2,9 @@
 
 Chỉ đánh dấu khi đã chạy thật. Unit test và build APK không thay thế kiểm chứng micro, TTS hoặc bố cục trên điện thoại.
 
-Thiết bị/API: chưa có thiết bị kết nối tại lúc thiết lập ban đầu (`adb devices` rỗng).
+Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. Chưa có điện thoại thật. Test tự động dùng adapter âm thanh giả cho các luồng không cần micro; không đánh dấu các mục chất lượng âm thanh từ kết quả UI test.
 
-- [ ] Cài APK debug và mở ứng dụng; cài mới có tiến độ 0/15.
+- [x] Cài APK debug và mở ứng dụng; cài mới có tiến độ 0/15.
 - [ ] Mở đủ 5 chủ đề, 15 bài; từ vựng và hội thoại khác nhau theo từng bài.
 - [ ] Từ chối quyền micro, hoàn thành một bài bằng chọn/gõ.
 - [ ] Từ chối quyền vĩnh viễn, mở cài đặt rồi quay lại và thử nói.
@@ -21,4 +21,4 @@ Thiết bị/API: chưa có thiết bị kết nối tại lúc thiết lập ba
 
 ## Tự động
 
-Kết quả unit test, lint, build APK và instrumentation được ghi sau khi chạy trong README và ledger của phiên triển khai. Không đánh dấu checklist thủ công từ kết quả tự động.
+18 test JVM/Robolectric và 5 test trên emulator đều đạt. Test bổ sung kiểm tra bàn phím mở trên MainActivity thật, nút kiểm tra vẫn bấm được; kiểm tra DataStore lưu/khôi phục bằng file thật. Lint 0 lỗi / 12 cảnh báo; APK debug build thành công. Chi tiết trong README và báo cáo triển khai. Không đánh dấu checklist thủ công từ kết quả tự động.

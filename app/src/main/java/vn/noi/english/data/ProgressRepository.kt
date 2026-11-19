@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 
 private val Context.progressStore by preferencesDataStore(name = "learning_progress")
 
@@ -18,8 +20,8 @@ interface ProgressRepository {
     suspend fun complete(lessonId: String)
 }
 
-class LocalProgressRepository(context: Context) : ProgressRepository {
-    private val store = context.applicationContext.progressStore
+class LocalProgressRepository internal constructor(private val store: DataStore<Preferences>) : ProgressRepository {
+    constructor(context: Context) : this(context.applicationContext.progressStore)
     private val completed = stringSetPreferencesKey("completed_lesson_ids")
     private val current = stringPreferencesKey("current_lesson_id")
     private val index = intPreferencesKey("current_turn_index")

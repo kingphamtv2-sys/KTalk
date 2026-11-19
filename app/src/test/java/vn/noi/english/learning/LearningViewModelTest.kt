@@ -65,10 +65,28 @@ class LearningViewModelTest {
         assertEquals("", vm.state.value.answer)
         assertEquals(AudioPhase.Idle, vm.state.value.audioPhase)
     }
-    @Test fun stalePositionIsSafelyResetAndStorageReadCanRetry() = runTest(dispatcher) {
+    @Test fun stalePositionIsSafelyReset() = runTest(dispatcher) {
         val vm = LearningViewModel(FakeProgress(Progress(lessonId = lesson.id, turnIndex = 99)))
         runCurrent(); vm.openLesson(lesson.id); vm.startConversation(); runCurrent()
         assertEquals(0, vm.state.value.turnIndex)
+    }
+    @Test fun readFailureDoesNotOverwriteProgressAndCanBeRetried() = runTest(dispatcher) {
+        var unavailable = true
+        val repo = object : ProgressRepository {
+            override val progress = kotlinx.coroutines.flow.flow {
+                if (unavailable) throw IOException("unreadable")
+                emit(Progress(setOf(lesson.id)))
+            }
+            override suspend fun savePosition(lessonId: String, turnIndex: Int) { error("Must not write") }
+            override suspend fun complete(lessonId: String) { error("Must not write") }
+        }
+        val vm = LearningViewModel(repo); runCurrent()
+        assertFalse(vm.state.value.ready)
+        vm.openLesson(lesson.id)
+        assertEquals(Screen.Home, vm.state.value.screen)
+        unavailable = false; vm.reloadProgress(); runCurrent()
+        assertTrue(vm.state.value.ready)
+        assertEquals(setOf(lesson.id), vm.state.value.progress.completedLessonIds)
     }
     @Test fun leavingConversationAndSwitchingModesClearsUnsubmittedSpeech() = runTest(dispatcher) {
         val vm = LearningViewModel(FakeProgress()); runCurrent()

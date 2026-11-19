@@ -22,4 +22,20 @@ class AnswerMatcherTest {
         assertTrue(AnswerMatcher.matches(turn.sample, turn))
         assertFalse(AnswerMatcher.matches("I'm not fine, thank you.", turn))
     }
+    @Test fun curriculumNameSlotsRejectSentenceFragments() {
+        val turn = Curriculum.topics[1].lessons[0].turns[0]
+        listOf("I'm a student", "I'm from Vietnam", "My name is is", "My name is a", "My name is i am").forEach {
+            assertFalse(it, AnswerMatcher.matches(it, turn))
+        }
+        assertTrue(AnswerMatcher.matches("My name is Ngọc Anh", turn))
+    }
+    @Test fun internalPunctuationAndSpeechTranscriptsAreEquivalent() {
+        val greeting = Curriculum.topics[0].lessons[2].turns[0]
+        listOf("Hello! I'm Lan.", "hello i'm lan", "Hi, I am Ngọc Anh.").forEach {
+            assertTrue(it, AnswerMatcher.matches(it, greeting))
+        }
+        val goodbye = Curriculum.topics[3].lessons[2].turns[3]
+        assertTrue(AnswerMatcher.matches("thank you goodbye", goodbye))
+        assertFalse(AnswerMatcher.matches("thank you not goodbye", goodbye))
+    }
 }

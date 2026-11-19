@@ -23,4 +23,10 @@ class CurriculumTest {
         }
         assertEquals(60, lessons.flatMap { it.turns }.map { it.prompt }.toSet().size)
     }
+    @Test fun answerChoicesRequireUnderstandingTheCurrentPrompt() {
+        val distractors = Curriculum.topics.flatMap { it.lessons }.flatMap { it.turns }
+            .flatMap { turn -> turn.choices.filterNot { AnswerMatcher.matches(it, turn) } }
+        assertTrue("A single repeated distractor makes every question guessable", distractors.groupingBy { it }.eachCount().values.max() <= 3)
+        assertTrue(Curriculum.topics[4].lessons[1].turns[2].choices.contains("Turn right."))
+    }
 }

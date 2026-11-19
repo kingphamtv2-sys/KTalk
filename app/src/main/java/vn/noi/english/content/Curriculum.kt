@@ -3,18 +3,18 @@ package vn.noi.english.content
 object Curriculum {
     private data class Draft(
         val prompt: String, val translation: String, val sample: String, val hint: String,
-        val explanation: String, val alternatives: List<String>, val slots: List<String>,
+        val explanation: String, val alternatives: List<String>, val slots: List<String>, val slotKind: SlotKind,
     )
     private fun t(q: String, vi: String, a: String, h: String, e: String,
-                  alt: List<String> = emptyList(), slots: List<String> = emptyList()) = Draft(q, vi, a, h, e, alt, slots)
+                  alt: List<String> = emptyList(), slots: List<String> = emptyList(), slotKind: SlotKind = if (slots.isEmpty()) SlotKind.None else SlotKind.PersonName) = Draft(q, vi, a, h, e, alt, slots, slotKind)
     private fun words(vararg pairs: Pair<String, String>) = pairs.map { Vocabulary(it.first, it.second) }
-    private val name = "[\\p{L}]+(?: [\\p{L}]+){0,3}"
+    private val name = "([\\p{L}]+(?: [\\p{L}]+){0,3})"
     private fun lesson(topic: String, slug: String, title: String, situation: String, vocabulary: List<Vocabulary>, vararg turns: Draft): Lesson {
         val id = "$topic-$slug"
         return Lesson(id, topic, title, situation, vocabulary, turns.mapIndexed { i, d ->
             Turn("$id-${i + 1}", d.prompt, d.translation, d.hint, d.sample, d.explanation,
-                if (i % 2 == 0) listOf(d.sample, "I want to buy a spaceship.") else listOf("I want to buy a spaceship.", d.sample),
-                listOf(d.sample) + d.alternatives, d.slots)
+                if (i % 2 == 0) listOf(d.sample, Distractors.forTurn(id, i)) else listOf(Distractors.forTurn(id, i), d.sample),
+                listOf(d.sample) + d.alternatives, d.slots, d.slotKind)
         })
     }
     val topics = listOf(
@@ -48,7 +48,7 @@ object Curriculum {
             lesson("introductions", "country", "Bạn đến từ đâu?", "Bạn nói về quê hương Việt Nam với Alex.",
                 words("I'm from…" to "Tôi đến từ…", "Vietnam" to "Việt Nam", "live in" to "Sống ở"),
                 t("Which country are you from?", "Bạn đến từ quốc gia nào?", "I'm from Vietnam.", "I'm from + tên quốc gia.", "From cho biết bạn đến từ đâu.", listOf("I am from Viet Nam.")),
-                t("Which city do you live in?", "Bạn đang sống ở thành phố nào?", "I live in Hanoi.", "I live in + tên thành phố.", "Live in nói về nơi bạn đang sống.", slots=listOf("i live in $name")),
+                t("Which city do you live in?", "Bạn đang sống ở thành phố nào?", "I live in Hanoi.", "I live in + tên thành phố.", "Live in nói về nơi bạn đang sống.", slots=listOf("i live in $name"), slotKind=SlotKind.PlaceName),
                 t("Is Vietnam in Asia?", "Việt Nam thuộc châu Á đúng không?", "Yes, it is.", "Yes + it is.", "Dùng câu trả lời ngắn để xác nhận thông tin."),
                 t("Would you like to ask where I'm from?", "Bạn có muốn hỏi tôi đến từ đâu không?", "Where are you from?", "Where + are you + from?", "Đây là câu hỏi tự nhiên khi làm quen.")),
             lesson("introductions", "work", "Công việc của bạn", "Bạn nói về việc học và công việc với Alex.",

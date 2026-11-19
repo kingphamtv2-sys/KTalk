@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-19-english-android-design.md`.
 
+**Kết quả triển khai 2026-11-19:** Đã hoàn thành bản debug theo Task 1–5, giữ nhánh `feature/android-mvp`. 18/18 test JVM/Robolectric và 5/5 test Android API 35 đạt, lint 0 lỗi / 12 cảnh báo, APK build và cài/mở được. Các checkbox bên dưới là kế hoạch gốc; kết quả, thay đổi có chủ đích và giới hạn kiểm chứng ghi tại `docs/implementation-report.md`. Chất lượng giọng nói trên điện thoại thật chưa được kiểm chứng. Reviewer độc lập gửi ba phát hiện đã sửa, nhưng bị hạn mức ngắt trước kết luận toàn bộ; phần còn lại do tác giả tự rà soát.
+
 ## Global Constraints
 
 - Ứng dụng Android viết bằng Kotlin, sử dụng Internet khi luyện nói.

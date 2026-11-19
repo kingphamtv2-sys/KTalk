@@ -16,7 +16,10 @@ class ImeLayoutDeviceTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     @Test fun keyboardInsetsAreAppliedOnceAndSubmitStaysReachable() {
         compose.waitUntil(5_000) { compose.onAllNodes(hasText("Bắt đầu học") or hasText("Tiếp tục học")).fetchSemanticsNodes().isNotEmpty() }
-        compose.onNode(hasText("Bắt đầu học") or hasText("Tiếp tục học")).performScrollTo().performClick()
+        // A real in-place upgrade may retain completed lessons, changing the suggested lesson.
+        // Pick this fixture explicitly instead of assuming the suggested lesson is the first one.
+        compose.onNodeWithText("Chào hỏi").performScrollTo().performClick()
+        compose.onNodeWithText("Chào buổi sáng").performScrollTo().performClick()
         compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
         compose.onNodeWithText("Gõ").performScrollTo().performClick()
         compose.onNodeWithTag("answer-input").performScrollTo().performClick().performTextInput("Good morning")

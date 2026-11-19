@@ -24,7 +24,7 @@ import vn.noi.english.ui.theme.*
         ScreenHeading(topic.title)
         Muted("Những tình huống nhỏ, dùng được mỗi ngày.")
         val done = topic.lessons.count { it.id in state.progress.completedLessonIds }
-        Panel(Color(0xFFEDF3F9), false) { ProgressTrack(done / 3f, "$done / 3 bài hoàn thành") }
+        Panel(Color(0xFFEDF3F9), false) { ProgressTrack(done / topic.lessons.size.coerceAtLeast(1).toFloat(), "$done / ${topic.lessons.size} bài hoàn thành") }
         topic.lessons.forEachIndexed { index, lesson ->
             Surface(onClick = { onLesson(lesson.id) }, shape = RoundedCornerShape(16.dp), color = Color.White, border = BorderStroke(1.dp, Line)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

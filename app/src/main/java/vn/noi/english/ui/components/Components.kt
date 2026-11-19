@@ -53,6 +53,16 @@ fun topicIcon(id: String): ImageVector = when(id) {
     "food" -> Icons.Outlined.LocalCafe
     "shopping" -> Icons.Outlined.ShoppingBag
     "directions" -> Icons.Outlined.Directions
+    "family" -> Icons.Outlined.PeopleOutline
+    "routine" -> Icons.Outlined.WbSunny
+    "time" -> Icons.Outlined.Schedule
+    "weather" -> Icons.Outlined.Cloud
+    "transport" -> Icons.Outlined.DirectionsBus
+    "hotel" -> Icons.Outlined.Hotel
+    "leisure" -> Icons.Outlined.Headphones
+    "help" -> Icons.Outlined.HelpOutline
+    "home" -> Icons.Outlined.Home
+    "phone" -> Icons.Outlined.Call
     else -> Icons.Outlined.ChatBubbleOutline
 }
 @Composable fun TopicIcon(id: String) {

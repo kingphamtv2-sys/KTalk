@@ -1,5 +1,7 @@
 # Thiết kế ứng dụng Android học giao tiếp tiếng Anh — bản đầu
 
+Phạm vi nội dung hiện tại đã mở rộng lên **45 bài / 15 chủ đề** theo [thiết kế cập nhật](2026-11-19-45-lessons-design.md). Các số lượng 15 bài / 5 chủ đề trong phần dưới ghi lại thiết kế bản đầu; luồng học, lưu tiến độ và giới hạn chức năng tiếp tục áp dụng.
+
 Trạng thái: Người dùng đã duyệt phạm vi và giao diện phương án 02, yêu cầu cập nhật thiết kế và tiếp tục xây dựng bằng Kotlin ngày 2026-11-19. Các lựa chọn triển khai bên dưới là quyết định của người xây dựng trong phạm vi đã thống nhất.
 
 ## Mục đích

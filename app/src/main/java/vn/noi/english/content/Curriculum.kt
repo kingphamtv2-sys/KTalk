@@ -118,7 +118,7 @@ object Curriculum {
                 t("It takes five minutes. Would you like to check the time?", "Mất năm phút. Bạn có muốn hỏi lại thời gian không?", "Is it a five-minute walk?", "Is it + a five-minute walk?", "A five-minute walk nghĩa là đi bộ mất năm phút.", listOf("Does it take five minutes?")),
                 t("Yes, five minutes on foot. You're all set!", "Đúng, đi bộ năm phút. Bạn biết đường rồi nhé!", "Thank you for your help!", "Thank you + for your help.", "Cảm ơn cụ thể sự giúp đỡ của người chỉ đường.", listOf("Thanks for your help.", "Thank you!")))
         ))
-    )
+    ) + DailyLessons.topics
     val lessons: List<Lesson> get() = topics.flatMap { it.lessons }
     fun lesson(id: String?): Lesson? = lessons.find { it.id == id }
 }

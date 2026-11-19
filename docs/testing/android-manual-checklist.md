@@ -4,8 +4,9 @@ Chỉ đánh dấu khi đã chạy thật. Unit test và build APK không thay t
 
 Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. Chưa có điện thoại thật. Test tự động dùng adapter âm thanh giả cho các luồng không cần micro; không đánh dấu các mục chất lượng âm thanh từ kết quả UI test.
 
-- [x] Cài APK debug và mở ứng dụng; cài mới có tiến độ 0/15.
-- [ ] Mở đủ 5 chủ đề, 15 bài; từ vựng và hội thoại khác nhau theo từng bài.
+- [x] Cài APK debug và mở ứng dụng; bản 45 bài cài mới có tiến độ 0/45 (kiểm tra UI tự động).
+- [x] Cài đè bản 15 bài lên 45 bài vẫn giữ bài cũ đã hoàn thành: 1/15 → 1/45.
+- [ ] Mở thủ công đủ 15 chủ đề, 45 bài; từ vựng và hội thoại khác nhau theo từng bài (cấu trúc/đáp án của tất cả bài đã kiểm tra tự động).
 - [ ] Từ chối quyền micro, hoàn thành một bài bằng chọn/gõ.
 - [ ] Từ chối quyền vĩnh viễn, mở cài đặt rồi quay lại và thử nói.
 - [ ] Có dịch vụ nhận diện: thu tiếng Anh, xem/sửa văn bản, thử lại và kiểm tra.
@@ -21,4 +22,4 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 
 ## Tự động
 
-18 test JVM/Robolectric và 5 test trên emulator đều đạt. Test bổ sung kiểm tra bàn phím mở trên MainActivity thật, nút kiểm tra vẫn bấm được; kiểm tra DataStore lưu/khôi phục bằng file thật. Lint 0 lỗi / 12 cảnh báo; APK debug build thành công. Chi tiết trong README và báo cáo triển khai. Không đánh dấu checklist thủ công từ kết quả tự động.
+24 test JVM/Robolectric và 7 test trên emulator đều đạt. Bao gồm toàn bộ nội dung 45 bài, tiếp tục tiến độ cũ, hoàn thành một bài mới, cỡ chữ lớn, bàn phím trên MainActivity thật, tạo lại Activity và DataStore lưu/khôi phục bằng file thật. Lint 0 lỗi / 15 cảnh báo; APK debug build thành công. Chi tiết trong README và báo cáo 45 bài. Các mục thủ công được ghi riêng để tránh nhầm với chất lượng micro/TTS.

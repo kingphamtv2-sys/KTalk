@@ -46,7 +46,7 @@ import vn.noi.english.ui.theme.*
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Chủ đề hằng ngày", style = MaterialTheme.typography.titleMedium)
-            Text("${state.progress.completedLessonIds.size} / 15 bài", style = MaterialTheme.typography.bodySmall, color = Subtle)
+            Text("${state.progress.completedLessonIds.size} / ${Curriculum.lessons.size} bài", style = MaterialTheme.typography.bodySmall, color = Subtle)
         }
         Curriculum.topics.forEach { topic ->
             val done = topic.lessons.count { it.id in state.progress.completedLessonIds }
@@ -54,7 +54,7 @@ import vn.noi.english.ui.theme.*
                 TopicIcon(topic.id)
                 Column(Modifier.weight(1f)) {
                     Text(topic.title, style = MaterialTheme.typography.titleMedium)
-                    Text(if (done == 0) "3 bài · Chưa bắt đầu" else "$done / 3 bài hoàn thành", style = MaterialTheme.typography.bodySmall, color = Subtle)
+                    Text(if (done == 0) "${topic.lessons.size} bài · Chưa bắt đầu" else "$done / ${topic.lessons.size} bài hoàn thành", style = MaterialTheme.typography.bodySmall, color = Subtle)
                 }
                 Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Subtle)
             }

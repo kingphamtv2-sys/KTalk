@@ -14,12 +14,12 @@ import vn.noi.english.ui.components.*
         BackHeader("Trên điện thoại này", onBack)
         Eyebrow("Hành trình của bạn")
         ScreenHeading("Mỗi bài học,\nmột bước tiến.")
-        Panel { Text("${state.progress.completedLessonIds.size} / 15 bài", style = MaterialTheme.typography.headlineLarge); ProgressTrack(state.progress.completedLessonIds.size / 15f, "Tổng số bài đã hoàn thành") }
+        Panel { Text("${state.progress.completedLessonIds.size} / ${Curriculum.lessons.size} bài", style = MaterialTheme.typography.headlineLarge); ProgressTrack(state.progress.completedLessonIds.size / Curriculum.lessons.size.coerceAtLeast(1).toFloat(), "Tổng số bài đã hoàn thành") }
         Curriculum.topics.forEach { topic ->
             Panel {
                 Text(topic.title, style = MaterialTheme.typography.titleMedium)
                 val count = topic.lessons.count { it.id in state.progress.completedLessonIds }
-                ProgressTrack(count / 3f, "$count / 3 bài hoàn thành")
+                ProgressTrack(count / topic.lessons.size.coerceAtLeast(1).toFloat(), "$count / ${topic.lessons.size} bài hoàn thành")
             }
         }
         Spacer(Modifier.height(4.dp))

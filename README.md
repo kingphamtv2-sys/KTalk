@@ -1,12 +1,13 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
-Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). Bản APK cập nhật tên và icon: `app/build/outputs/apk/debug/KTalk-debug.apk`.
+Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.2.0 với 45 bài**: `app/build/outputs/apk/debug/KTalk-debug.apk`.
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
-## Có trong bản đầu
+## Nội dung hiện tại
 
-- 5 chủ đề hằng ngày, 15 bài riêng, mỗi bài 3 cụm từ và 4 lượt hội thoại.
+- 15 chủ đề hằng ngày, 45 bài riêng, mỗi bài 3 cụm từ và 4 lượt hội thoại: tổng 135 mục cụm từ và 180 lượt.
+- [Danh sách đầy đủ 45 bài](docs/content/45-lessons.md), gồm 30 bài mới dành cho người mới bắt đầu.
 - Giải thích tiếng Việt và gợi ý câu trả lời có thể ẩn.
 - Nói qua micro, xem/sửa kết quả nhận diện trước khi kiểm tra; luôn có chế độ chọn hoặc gõ.
 - Nghe câu hỏi, cụm từ và câu trả lời mẫu bằng giọng tiếng Anh trên thiết bị.
@@ -41,6 +42,8 @@ adb shell am start -n vn.noi.english/.MainActivity
 
 Đây là bản debug để thử nghiệm, chưa phải gói phát hành Play Store.
 
+Bản 0.2.0 dùng cùng package và chữ ký với bản 15 bài. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử trên emulator: hoàn thành một bài ở bản cũ, cài đè bản mới và giữ đúng trạng thái 1/45 bài.
+
 ## Nhận diện, giọng đọc và dữ liệu
 
 Luyện nói cần dịch vụ nhận diện tiếng Anh tương thích Android SpeechRecognizer trên điện thoại; dịch vụ này có thể dùng Internet. Cấp quyền micro khi bạn muốn nói; từ chối quyền vẫn học được bằng chọn/gõ. Khi máy chưa nghe rõ hoặc dịch vụ lỗi, ứng dụng thông báo riêng, không đánh dấu câu trả lời sai.
@@ -62,11 +65,11 @@ Unit tests bao phủ nội dung, đáp án, khôi phục, ghi lỗi, đọc lỗ
 
 Robolectric kiểm tra được tương tác Compose nhưng không thay cho thử giọng nói thực tế. Checklist thủ công: [android-manual-checklist.md](docs/testing/android-manual-checklist.md).
 
-Kết quả đã xác minh: **18/18 test JVM/Robolectric, 5/5 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 12 cảnh báo**. Đã cài và mở APK trên emulator. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết rà soát, quyết định triển khai và các giới hạn: [báo cáo triển khai](docs/implementation-report.md).
+Kết quả đã xác minh cho bản 45 bài: **24/24 test JVM/Robolectric, 7/7 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 15 cảnh báo**. Đã thử cập nhật thật từ bản 15 bài và giữ nguyên bài đã hoàn thành. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết: [báo cáo mở rộng 45 bài](docs/45-lessons-report.md).
 
 ## Cấu trúc
 
-- `content/`: nội dung 15 bài, không gọi mạng.
+- `content/`: nội dung 45 bài, không gọi mạng; 15 bài gốc và 30 bài mới được tách file.
 - `learning/`: bộ so khớp, ViewModel và trạng thái học.
 - `data/`: lưu tiến độ DataStore.
 - `audio/`: adapter nhận diện và đọc mẫu Android.

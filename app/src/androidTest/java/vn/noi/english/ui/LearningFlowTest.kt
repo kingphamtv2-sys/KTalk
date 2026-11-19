@@ -19,9 +19,9 @@ import vn.noi.english.ui.theme.NoiTheme
 @RunWith(AndroidJUnit4::class)
 class LearningFlowTest {
     @get:Rule val compose = createComposeRule()
-    private fun launch(fontScale: Float = 1f): LearningViewModel {
+    private fun launch(fontScale: Float = 1f, initial: Progress = Progress()): LearningViewModel {
         val repo = object : ProgressRepository {
-            override val progress = MutableStateFlow(Progress())
+            override val progress = MutableStateFlow(initial)
             override suspend fun savePosition(lessonId: String, turnIndex: Int) { progress.value = progress.value.copy(lessonId = lessonId, turnIndex = turnIndex) }
             override suspend fun complete(lessonId: String) { progress.value = progress.value.copy(completedLessonIds = progress.value.completedLessonIds + lessonId, lessonId = null, turnIndex = 0) }
         }
@@ -84,5 +84,30 @@ class LearningFlowTest {
         compose.onNodeWithText("Chọn câu").performScrollTo().performClick()
         compose.onNode(hasText("Good morning!") and hasClickAction()).performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("Lượt tiếp theo").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun expandedCatalogShowsNewTotalAndResumesOldProgress() {
+        launch(initial = Progress(setOf("greetings-morning"), "directions-route", 2))
+        compose.onNodeWithText("1 / 45 bài").assertExists()
+        compose.onNodeWithText("Tiến độ").performClick()
+        compose.onNodeWithText("1 / 45 bài").assertExists()
+        compose.onNodeWithText("Học mỗi ngày").performClick()
+        compose.onNodeWithText("Tiếp tục học").performScrollTo().performClick()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Lượt 3 / 4").assertExists()
+    }
+    @Test fun newFamilyLessonCanBeCompletedWithoutAudio() {
+        val vm = launch()
+        compose.onNodeWithText("0 / 45 bài").assertExists()
+        compose.onNodeWithText("Gia đình").performScrollTo().performClick()
+        compose.onNodeWithText("Giới thiệu người thân").performScrollTo().performClick()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        val lesson = vn.noi.english.content.Curriculum.lesson("family-photo")!!
+        lesson.turns.forEachIndexed { index, turn ->
+            compose.onNodeWithText("Chọn câu").performScrollTo().performClick()
+            compose.onNode(hasText(turn.sample) and hasClickAction()).performScrollTo().performClick()
+            compose.onNodeWithText(if (index == 3) "Hoàn thành bài" else "Lượt tiếp theo").performScrollTo().performClick()
+        }
+        compose.waitUntil(5_000) { vm.state.value.screen == Screen.Completion }
+        compose.runOnIdle { org.junit.Assert.assertEquals(setOf("family-photo"), vm.state.value.progress.completedLessonIds) }
     }
 }

@@ -1,12 +1,14 @@
 # Báo cáo triển khai bản Android đầu tiên
 
+**Bản hiện tại là KTalk 0.2.0 với 45 bài.** Xem [báo cáo cập nhật](45-lessons-report.md). Các mục dưới đây ghi lại lịch sử bản 15 bài và lần đổi tên/biểu tượng.
+
 ## Cập nhật tên ứng dụng
 
 Theo yêu cầu người dùng, tên hiển thị trên launcher và màn hình chính đã đổi thành **KTalk**. Màn hình chính dùng chung resource `app_name`. Build lại thành công; `aapt dump badging` xác nhận `application-label:'KTalk'`.
 
 Biểu tượng mới dùng chữ **K** khoét trong bong bóng hội thoại trắng, nền xanh lam `#254FDB`. Có adaptive icon, round icon và monochrome cho Android 13+. Bản xem trước tại `docs/design/ktalk-icon.png` được dựng trực tiếp từ đường vector của asset. Build/lint và chữ ký APK đã kiểm tra; lint 0 lỗi / 15 cảnh báo, trong đó 3 cảnh báo mới về resource dự phòng và qualifier icon. Không chạy lại test chức năng cho thay đổi asset này.
 
-Bản cài mới nhất: `app/build/outputs/apk/debug/KTalk-debug.apk`, SHA-256 `8ab7ec4e3a1def9be7012191de1ee0daed6b0c6b76cb50d5ad06059b91754738`.
+Bản cài tại lần đổi biểu tượng: `app/build/outputs/apk/debug/KTalk-debug.apk`, SHA-256 `8ab7ec4e3a1def9be7012191de1ee0daed6b0c6b76cb50d5ad06059b91754738`. File này đã được thay bằng bản 45 bài; xem SHA mới trong báo cáo cập nhật.
 
 Các kết quả kiểm thử đầy đủ, kích thước/SHA và ảnh bên dưới ghi lại bản đầu trước đổi tên. Lần đổi nhãn này đã kiểm tra build và nhãn trong APK, không chạy lại các test chức năng.
 

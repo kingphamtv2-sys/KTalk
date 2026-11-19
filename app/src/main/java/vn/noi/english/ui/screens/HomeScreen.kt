@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import vn.noi.english.R
 import vn.noi.english.content.Curriculum
 import vn.noi.english.learning.LearningState
 import vn.noi.english.ui.components.*
@@ -22,7 +24,7 @@ import vn.noi.english.ui.theme.*
     val suggested = Curriculum.lesson(state.progress.lessonId) ?: Curriculum.lessons.firstOrNull { it.id !in state.progress.completedLessonIds } ?: Curriculum.lessons.first()
     Page {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("nói.", style = MaterialTheme.typography.headlineLarge, color = Blue)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, color = Blue)
             Text("Lưu trên thiết bị", style = MaterialTheme.typography.bodySmall, color = Subtle)
         }
         Spacer(Modifier.height(8.dp))

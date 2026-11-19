@@ -31,7 +31,7 @@ Bản `learning-flow-v1.html` chỉ còn là lịch sử phác thảo, không ph
 
 ### Hệ thống giao diện phương án 02 đã duyệt
 
-- Tên tạm của ứng dụng: “nói.”; dùng tên này trong bản đầu, có thể đổi trước phát hành. Package đề xuất: `vn.noi.english`.
+- Tên ứng dụng: “KTalk”, theo yêu cầu đổi tên của người dùng sau khi hoàn thành bản đầu. Tên cũ trong bản phác thảo là “nói.”. Package hiện có: `vn.noi.english`.
 - Nền sáng trắng sương `#F7F9FB`, chữ chính xanh mực `#172D3E`, chữ phụ `#61717E`, hành động chính xanh lam `#254FDB`, viền trung tính `#E3E9EE`, phản hồi tích cực xanh dịu `#E8F3EF`.
 - Phông Be Vietnam Pro nếu đóng gói được từ nguồn chính thức cùng giấy phép; dùng sans-serif hệ thống làm phương án thay thế. Không tải font từ mạng trong thời gian chạy ứng dụng.
 - Bo góc thẻ 14–20dp, nút 12dp, khoảng đệm màn hình 22dp. Chữ tiêu đề 24–28sp, nội dung 14–16sp, nhãn phụ tối thiểu 12sp trong ứng dụng thật; hỗ trợ tăng cỡ chữ hệ thống. Không sao chép kích thước chữ nhỏ của bảng giới thiệu bản phác thảo vào Android.

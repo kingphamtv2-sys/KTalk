@@ -1,4 +1,4 @@
-# nói. — Tiếng Anh giao tiếp cho người Việt
+# KTalk — Tiếng Anh giao tiếp cho người Việt
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 

@@ -1,5 +1,11 @@
 # Báo cáo triển khai bản Android đầu tiên
 
+## Cập nhật tên ứng dụng
+
+Theo yêu cầu người dùng, tên hiển thị trên launcher và màn hình chính đã đổi thành **KTalk**. Màn hình chính dùng chung resource `app_name`. Build lại thành công; `aapt dump badging` xác nhận `application-label:'KTalk'`. Bản cài cập nhật: `app/build/outputs/apk/debug/KTalk-debug.apk`, SHA-256 `3a7e13d2a91a31d8eabbe18ac94b4e177c4a1f2b421758b4cbb91442fa256bd1`.
+
+Các kết quả kiểm thử đầy đủ, kích thước/SHA và ảnh bên dưới ghi lại bản đầu trước đổi tên. Lần đổi nhãn này đã kiểm tra build và nhãn trong APK, không chạy lại các test chức năng.
+
 ## Phạm vi
 
 Kotlin, Compose, giao diện phương án 02, 5 chủ đề / 15 bài / 60 lượt hội thoại, giải thích tiếng Việt, nói/chọn/gõ, nghe mẫu và DataStore. Nội dung và font được đóng gói, không có đăng nhập, backend, API key, LLM hoặc chấm phát âm.

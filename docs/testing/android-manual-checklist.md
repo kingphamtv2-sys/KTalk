@@ -6,6 +6,8 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 
 - [x] Cài APK debug và mở ứng dụng; bản 45 bài cài mới có tiến độ 0/45 (kiểm tra UI tự động).
 - [x] Cài đè bản 15 bài lên 45 bài vẫn giữ bài cũ đã hoàn thành: 1/15 → 1/45.
+- [x] Cài đè bản 0.2.0 lên 0.3.0: giữ 1/45 bài; đánh dấu thẻ rồi đóng/mở lại giữ 1 Đã nhớ / 1 Cần ôn, không đổi tiến độ hội thoại.
+- [x] Xem ảnh chụp trang từ vựng, thẻ đã lật và quiz từ APK chạy trên emulator.
 - [ ] Mở thủ công đủ 15 chủ đề, 45 bài; từ vựng và hội thoại khác nhau theo từng bài (cấu trúc/đáp án của tất cả bài đã kiểm tra tự động).
 - [ ] Từ chối quyền micro, hoàn thành một bài bằng chọn/gõ.
 - [ ] Từ chối quyền vĩnh viễn, mở cài đặt rồi quay lại và thử nói.
@@ -22,4 +24,4 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 
 ## Tự động
 
-24 test JVM/Robolectric và 7 test trên emulator đều đạt. Bao gồm toàn bộ nội dung 45 bài, tiếp tục tiến độ cũ, hoàn thành một bài mới, cỡ chữ lớn, bàn phím trên MainActivity thật, tạo lại Activity và DataStore lưu/khôi phục bằng file thật. Lint 0 lỗi / 15 cảnh báo; APK debug build thành công. Chi tiết trong README và báo cáo 45 bài. Các mục thủ công được ghi riêng để tránh nhầm với chất lượng micro/TTS.
+41 test JVM/Robolectric và 14 test trên emulator đều đạt cho bản 0.3.0. Bao gồm toàn bộ nội dung 45 bài, tiếp tục tiến độ cũ, hoàn thành một bài mới, cỡ chữ lớn, bàn phím trên MainActivity thật, tạo lại Activity và DataStore lưu/khôi phục bằng file thật. Bổ sung thẻ từ, quiz, chặn chuyển tab trong lúc lưu và xử lý lỗi của hai kho tiến độ độc lập. Lint 0 lỗi / 15 cảnh báo có sẵn; APK debug build thành công. Chi tiết trong README và báo cáo Vocabulary. Các mục thủ công được ghi riêng để tránh nhầm với chất lượng micro/TTS.

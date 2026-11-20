@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,17 +16,40 @@ import vn.noi.english.data.Progress
 import vn.noi.english.data.ProgressRepository
 import vn.noi.english.learning.*
 import vn.noi.english.ui.theme.NoiTheme
+import vn.noi.english.vocabulary.*
+import vn.noi.english.data.VocabularyProgress
+import vn.noi.english.data.VocabularyRepository
 
 @RunWith(AndroidJUnit4::class)
 class LearningFlowTest {
     @get:Rule val compose = createComposeRule()
-    private fun launch(fontScale: Float = 1f, initial: Progress = Progress()): LearningViewModel {
+    private lateinit var vocabulary: VocabularyViewModel
+    private fun launch(fontScale: Float = 1f, initial: Progress = Progress(), conversationReadFails: Boolean = false, vocabularyReadFails: Boolean = false,
+                       wordWriteGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null, wordWriteFails: Boolean = false): LearningViewModel {
         val repo = object : ProgressRepository {
-            override val progress = MutableStateFlow(initial)
-            override suspend fun savePosition(lessonId: String, turnIndex: Int) { progress.value = progress.value.copy(lessonId = lessonId, turnIndex = turnIndex) }
-            override suspend fun complete(lessonId: String) { progress.value = progress.value.copy(completedLessonIds = progress.value.completedLessonIds + lessonId, lessonId = null, turnIndex = 0) }
+            val saved = MutableStateFlow(initial)
+            override val progress = kotlinx.coroutines.flow.flow {
+                if (conversationReadFails) throw java.io.IOException("Conversation storage unavailable")
+                emitAll(saved)
+            }
+            override suspend fun savePosition(lessonId: String, turnIndex: Int) { saved.value = saved.value.copy(lessonId = lessonId, turnIndex = turnIndex) }
+            override suspend fun complete(lessonId: String) { saved.value = saved.value.copy(completedLessonIds = saved.value.completedLessonIds + lessonId, lessonId = null, turnIndex = 0) }
         }
         val vm = LearningViewModel(repo)
+        val words = object : VocabularyRepository {
+            val saved = MutableStateFlow(VocabularyProgress())
+            override val progress = kotlinx.coroutines.flow.flow {
+                if (vocabularyReadFails) throw java.io.IOException("Vocabulary storage unavailable")
+                emitAll(saved)
+            }
+            override suspend fun mark(wordId: String, known: Boolean) {
+                wordWriteGate?.await()
+                if (wordWriteFails) throw java.io.IOException("Write failed")
+                val old = saved.value
+                saved.value = if (known) VocabularyProgress(old.known + wordId, old.review - wordId) else VocabularyProgress(old.known - wordId, old.review + wordId)
+            }
+        }
+        vocabulary = VocabularyViewModel(words, kotlin.random.Random(42))
         val input = object : SpeechInput {
             override val available = false
             override fun start(onResult: (String) -> Unit, onError: (String) -> Unit, onPhase: (AudioPhase) -> Unit) { onError("Không có dịch vụ nhận diện") }
@@ -42,10 +66,11 @@ class LearningFlowTest {
         compose.setContent {
             val currentDensity = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(currentDensity.density, fontScale)) {
-                NoiTheme { NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}) }
+                NoiTheme { NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}, vocabulary) }
             }
         }
-        compose.waitUntil(5_000) { vm.state.value.ready }
+        compose.waitUntil(5_000) { !vm.state.value.loading }
+        compose.waitUntil(5_000) { !vocabulary.state.value.loading }
         return vm
     }
     @Test fun beginnerCanCompleteAllFourTurnsWithoutMicrophone() {
@@ -109,5 +134,95 @@ class LearningFlowTest {
         }
         compose.waitUntil(5_000) { vm.state.value.screen == Screen.Completion }
         compose.runOnIdle { org.junit.Assert.assertEquals(setOf("family-photo"), vm.state.value.progress.completedLessonIds) }
+    }
+    @Test fun vocabularyCardsReviewIndependentlyOfConversationProgress() {
+        launch(initial = Progress(setOf("greetings-morning")))
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Học từ vựng").assertExists()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("Chào buổi sáng").assertExists()
+        compose.onNodeWithText("Đã nhớ").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vocabulary.state.value.progress.known.size == 1 }
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("Cần ôn").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vocabulary.state.value.progress.review.size == 1 }
+        compose.onNodeWithContentDescription("Quay lại").performScrollTo().performClick()
+        compose.onNodeWithTag("known-word-count").assertTextEquals("1 / 135 đã nhớ")
+        compose.onNodeWithText("Ôn từ cần nhớ").performScrollTo().performClick()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("Đã nhớ").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vocabulary.state.value.page == VocabularyPage.CardsDone }
+        compose.onNodeWithText("Về từ vựng").performScrollTo().performClick()
+        compose.onNodeWithTag("known-word-count").assertTextEquals("2 / 135 đã nhớ")
+        compose.onNodeWithText("Học mỗi ngày").performClick()
+        compose.onNodeWithText("Tiến độ").performClick()
+        compose.onNodeWithText("1 / 45 bài").assertExists()
+    }
+    @Test fun vocabularyQuizShowsFeedbackAndScoresOnlyThisSession() {
+        launch()
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Kiểm tra nhanh").performScrollTo().performClick()
+        repeat(5) { index ->
+            val question = vocabulary.state.value.currentQuestion!!
+            val answer = if (index == 0) question.options.first { it != question.correctMeaning } else question.correctMeaning
+            compose.onNode(hasText(answer) and hasClickAction()).performScrollTo().performClick()
+            compose.onNodeWithText(if (index == 4) "Xem kết quả" else "Câu tiếp theo").performScrollTo().performClick()
+        }
+        compose.onNodeWithText("4 / 5 câu đúng").assertExists()
+        compose.runOnIdle { org.junit.Assert.assertEquals(VocabularyProgress(), vocabulary.state.value.progress) }
+    }
+    @Test fun vocabularyCardsSupportLargeTextAndMissingVoice() {
+        launch(fontScale = 2f)
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Nghe từ").performScrollTo().performClick()
+        compose.onNodeWithText("Đã hiểu").performClick()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("Đã nhớ").performScrollTo().assertIsDisplayed().performClick()
+    }
+    @Test fun vocabularyRemainsAvailableWhenOnlyConversationStorageFails() {
+        val vm = launch(conversationReadFails = true)
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Nghe từ").performScrollTo().performClick()
+        compose.onNodeWithText("Đã hiểu").performClick()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("Đã nhớ").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vocabulary.state.value.progress.known.size == 1 }
+        compose.runOnIdle { org.junit.Assert.assertFalse(vm.state.value.ready) }
+    }
+    @Test fun conversationRemainsAvailableWhenOnlyVocabularyStorageFails() {
+        val vm = launch(vocabularyReadFails = true)
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Tải lại từ vựng").performScrollTo().assertExists()
+        compose.onNodeWithText("Học mỗi ngày").performClick()
+        compose.onNodeWithText("Bắt đầu học").performScrollTo().performClick()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.runOnIdle { org.junit.Assert.assertEquals(Screen.Conversation, vm.state.value.screen) }
+    }
+    @Test fun sameFrameTabActionsCannotLeaveAPendingWordSave() {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val vm = launch(wordWriteGate = gate, wordWriteFails = true)
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        val tabActions = listOf("Học mỗi ngày", "Tiến độ", "Từ vựng").map { label ->
+            compose.onNodeWithText(label).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsActions.OnClick].action!!
+        }
+        compose.runOnIdle {
+            vocabulary.markCurrent(true)
+            org.junit.Assert.assertTrue(vocabulary.state.value.saving)
+            try {
+                tabActions.forEach { action ->
+                    action.invoke()
+                    org.junit.Assert.assertEquals(Screen.VocabularyMode, vm.state.value.screen)
+                    org.junit.Assert.assertEquals(VocabularyPage.Cards, vocabulary.state.value.page)
+                }
+            } finally { gate.complete(Unit) }
+        }
+        compose.waitUntil(5_000) { !vocabulary.state.value.saving && vocabulary.state.value.error != null }
+        compose.onNodeWithText("Chưa lưu được mức nhớ.", substring = true).assertExists()
+        compose.runOnIdle { org.junit.Assert.assertEquals(0, vocabulary.state.value.cardIndex) }
     }
 }

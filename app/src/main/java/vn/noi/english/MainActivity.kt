@@ -17,11 +17,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import vn.noi.english.audio.*
 import vn.noi.english.data.LocalProgressRepository
+import vn.noi.english.data.LocalVocabularyRepository
+import vn.noi.english.vocabulary.VocabularyViewModel
 import vn.noi.english.learning.*
 import vn.noi.english.ui.NoiApp
 import vn.noi.english.ui.theme.NoiTheme
 
 class MainActivity : ComponentActivity() {
+    private val vocabularyVm: VocabularyViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = VocabularyViewModel(LocalVocabularyRepository(applicationContext)) as T
+        }
+    }
     private val vm: LearningViewModel by viewModels {
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
@@ -44,7 +52,7 @@ class MainActivity : ComponentActivity() {
         input = AndroidSpeechInput(this); output = AndroidSpeechOutput(this)
         setContent {
             NoiTheme {
-                NoiApp(vm, input, output, ::requestMicrophone, ::openVoiceSettings)
+                NoiApp(vm, input, output, ::requestMicrophone, ::openVoiceSettings, vocabularyVm)
                 if (permissionDialog) {
                     val askedBefore = getPreferences(MODE_PRIVATE).getBoolean("asked_microphone", false)
                     val permanentlyDenied = askedBefore && !shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)

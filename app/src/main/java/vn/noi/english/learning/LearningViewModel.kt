@@ -81,11 +81,12 @@ class LearningViewModel(private val repository: ProgressRepository) : ViewModel(
     fun retry() { if (!state.value.saving) mutable.update { it.copy(answer = "", feedback = Feedback.None, audioPhase = AudioPhase.Idle, message = null) } }
     fun home() { if (!state.value.saving) mutable.update { it.copy(screen = Screen.Home, audioPhase = AudioPhase.Idle, message = null) } }
     fun showProgress() { if (!state.value.saving) mutable.update { it.copy(screen = Screen.Progress, audioPhase = AudioPhase.Idle, message = null) } }
+    fun showVocabulary() { if (!state.value.saving) mutable.update { it.copy(screen = Screen.VocabularyMode, audioPhase = AudioPhase.Idle, message = null) } }
     fun back() {
         val s = state.value
         if (s.saving) return
         when (s.screen) {
-            Screen.Lessons, Screen.Progress -> home()
+            Screen.Lessons, Screen.Progress, Screen.VocabularyMode -> home()
             Screen.Vocabulary, Screen.Conversation, Screen.Completion -> openTopic(s.topicId)
             Screen.Home -> Unit
         }

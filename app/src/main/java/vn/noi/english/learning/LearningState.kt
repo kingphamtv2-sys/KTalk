@@ -3,7 +3,7 @@ package vn.noi.english.learning
 import vn.noi.english.content.Curriculum
 import vn.noi.english.data.Progress
 
-enum class Screen { Home, Progress, Lessons, Vocabulary, Conversation, Completion }
+enum class Screen { Home, Progress, Lessons, Vocabulary, Conversation, Completion, VocabularyMode }
 enum class AnswerMode { Speak, Choose, Type }
 enum class Feedback { None, Accepted, TryTemplate }
 enum class AudioPhase { Idle, Listening, Processing }

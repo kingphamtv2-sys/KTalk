@@ -1,6 +1,6 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
-Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.2.0 với 45 bài**: `app/build/outputs/apk/debug/KTalk-debug.apk`.
+Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.3.0 với 45 bài và Vocabulary**: [KTalk-0.3.0-vocabulary.apk](releases/KTalk-0.3.0-vocabulary.apk).
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
@@ -12,6 +12,8 @@ Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh la
 - Nói qua micro, xem/sửa kết quả nhận diện trước khi kiểm tra; luôn có chế độ chọn hoặc gõ.
 - Nghe câu hỏi, cụm từ và câu trả lời mẫu bằng giọng tiếng Anh trên thiết bị.
 - Tiến độ lưu bằng DataStore trên điện thoại, tiếp tục bài chưa học xong, học lại không đếm trùng.
+- Tab **Từ vựng** riêng: 135 thẻ từ/cụm từ, nghe tiếng Anh, lật nghĩa tiếng Việt và tự đánh dấu **Đã nhớ / Cần ôn**. Lọc theo chủ đề hoặc chỉ ôn các từ cần nhớ.
+- **Kiểm tra nhanh** tối đa 5 câu, mỗi câu 4 lựa chọn nghĩa tiếng Việt; ưu tiên từ cần ôn và chưa học. Quiz chỉ tính điểm của lượt hiện tại, không tự đổi mức nhớ.
 - Không cần tài khoản, API key hoặc backend; chưa có trò chuyện AI tự do hoặc chấm phát âm.
 
 ## Build
@@ -42,7 +44,7 @@ adb shell am start -n vn.noi.english/.MainActivity
 
 Đây là bản debug để thử nghiệm, chưa phải gói phát hành Play Store.
 
-Bản 0.2.0 dùng cùng package và chữ ký với bản 15 bài. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử trên emulator: hoàn thành một bài ở bản cũ, cài đè bản mới và giữ đúng trạng thái 1/45 bài.
+Bản 0.3.0 dùng cùng package và chữ ký debug với bản cũ. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Chi tiết kiểm chứng và hình ảnh của chế độ mới: [báo cáo Vocabulary](docs/vocabulary-report.md).
 
 ## Nhận diện, giọng đọc và dữ liệu
 
@@ -50,7 +52,7 @@ Luyện nói cần dịch vụ nhận diện tiếng Anh tương thích Android 
 
 Nghe mẫu dùng Android TextToSpeech với giọng en-US. Nếu thiếu giọng/engine, dùng nút **Cài giọng** hoặc tìm **Chuyển văn bản thành giọng nói** trong cài đặt điện thoại. Không cam kết micro hoặc đọc mẫu hoạt động ngoại tuyến.
 
-Ứng dụng lưu mã bài đã hoàn thành và vị trí bài/lượt gần nhất. Không lưu file thu âm hoặc lịch sử câu trả lời. Dịch vụ nhận diện của thiết bị có thể xử lý giọng nói qua mạng theo chính sách của dịch vụ đó. Tiến độ chưa đồng bộ giữa thiết bị; xóa dữ liệu hoặc gỡ app có thể làm mất tiến độ. Sao lưu tự động của ứng dụng đã tắt.
+Ứng dụng lưu mã bài đã hoàn thành và vị trí bài/lượt gần nhất. Mức nhớ từ vựng được lưu trong DataStore riêng, không thay đổi số bài hội thoại đã hoàn thành. Kết quả quiz không lưu sau khi đóng ứng dụng. Không lưu file thu âm hoặc lịch sử câu trả lời. Dịch vụ nhận diện của thiết bị có thể xử lý giọng nói qua mạng theo chính sách của dịch vụ đó. Tiến độ chưa đồng bộ giữa thiết bị; xóa dữ liệu hoặc gỡ app có thể làm mất tiến độ. Sao lưu tự động của ứng dụng đã tắt.
 
 Kiểm tra câu trả lời chỉ so với biến thể được soạn sẵn và một số cấu trúc có chỗ điền. Một câu tiếng Anh đúng nhưng nằm ngoài mẫu vẫn có thể được đề nghị thử theo mẫu; kết quả không phải đánh giá toàn diện ngữ pháp/phát âm.
 
@@ -65,12 +67,13 @@ Unit tests bao phủ nội dung, đáp án, khôi phục, ghi lỗi, đọc lỗ
 
 Robolectric kiểm tra được tương tác Compose nhưng không thay cho thử giọng nói thực tế. Checklist thủ công: [android-manual-checklist.md](docs/testing/android-manual-checklist.md).
 
-Kết quả đã xác minh cho bản 45 bài: **24/24 test JVM/Robolectric, 7/7 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 15 cảnh báo**. Đã thử cập nhật thật từ bản 15 bài và giữ nguyên bài đã hoàn thành. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết: [báo cáo mở rộng 45 bài](docs/45-lessons-report.md).
+Kết quả đã xác minh cho bản 0.3.0: **41/41 test JVM/Robolectric, 14/14 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 15 cảnh báo có sẵn**. Bao gồm thẻ từ, quiz, lỗi đọc/ghi, kho tiến độ độc lập và chặn chuyển tab khi đang lưu. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết: [báo cáo Vocabulary](docs/vocabulary-report.md); [báo cáo mở rộng 45 bài trước đó](docs/45-lessons-report.md).
 
 ## Cấu trúc
 
 - `content/`: nội dung 45 bài, không gọi mạng; 15 bài gốc và 30 bài mới được tách file.
 - `learning/`: bộ so khớp, ViewModel và trạng thái học.
+- `vocabulary/`: danh mục thẻ từ, bộ tạo quiz và trạng thái học từ vựng độc lập.
 - `data/`: lưu tiến độ DataStore.
 - `audio/`: adapter nhận diện và đọc mẫu Android.
 - `ui/`: theme, thành phần và màn hình Compose.

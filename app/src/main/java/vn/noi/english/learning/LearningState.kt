@@ -6,7 +6,7 @@ import vn.noi.english.data.Progress
 enum class Screen { Home, Progress, Lessons, Vocabulary, Conversation, Completion, VocabularyMode }
 enum class AnswerMode { Speak, Choose, Type }
 enum class Feedback { None, Accepted, TryTemplate }
-enum class AudioPhase { Idle, Listening, Processing }
+enum class AudioPhase { Idle, Preparing, Listening, Processing }
 data class LearningState(
     val screen: Screen = Screen.Home,
     val topicId: String = "greetings",

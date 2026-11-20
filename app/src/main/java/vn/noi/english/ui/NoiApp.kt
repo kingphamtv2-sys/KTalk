@@ -26,7 +26,8 @@ import vn.noi.english.vocabulary.VocabularyViewModel
 import vn.noi.english.vocabulary.VocabularyPage
 
 @Composable fun NoiApp(viewModel: LearningViewModel, speechInput: SpeechInput, speechOutput: SpeechOutput,
-                       requestMicrophone: () -> Unit, openVoiceSettings: () -> Unit, vocabularyViewModel: VocabularyViewModel) {
+                       requestMicrophone: () -> Unit, openVoiceSettings: () -> Unit, vocabularyViewModel: VocabularyViewModel,
+                       onSystemSpeech: (() -> Unit)? = null, openSpeechSettings: (() -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val voice by speechOutput.status.collectAsStateWithLifecycle()
     val words by vocabularyViewModel.state.collectAsStateWithLifecycle()
@@ -74,8 +75,10 @@ import vn.noi.english.vocabulary.VocabularyPage
                         Screen.Vocabulary -> VocabularyScreen(state, viewModel::back, ::speak, viewModel::startConversation)
                         Screen.Conversation -> key(state.lessonId, state.turnIndex) { ConversationScreen(state, { stopAudio(); viewModel.back() }, ::speak,
                             { stopAudio(); viewModel.setMode(it) }, viewModel::setAnswer, viewModel::submit,
-                            { if (!state.saving) { speechOutput.stop(); requestMicrophone() } }, speechInput::stop,
-                            { stopAudio(); viewModel.retry() }, { stopAudio(); viewModel.nextTurn() }) }
+                            { if (!state.saving) { speechMessage = null; speechOutput.stop(); requestMicrophone() } }, speechInput::stop,
+                            { stopAudio(); viewModel.retry() }, { stopAudio(); viewModel.nextTurn() },
+                            onSystemSpeech = onSystemSpeech?.let { action -> { stopAudio(); speechMessage = null; action() } },
+                            openSpeechSettings = openSpeechSettings) }
                         Screen.Completion -> CompletionScreen(state, { viewModel.openTopic(state.topicId) }, { state.lessonId?.let(viewModel::openLesson) })
                     }
                 }

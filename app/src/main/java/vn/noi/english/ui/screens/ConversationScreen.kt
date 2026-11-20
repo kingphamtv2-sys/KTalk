@@ -23,7 +23,8 @@ import vn.noi.english.ui.theme.*
 
 @Composable fun ConversationScreen(state: LearningState, onBack: () -> Unit, onSpeak: (String) -> Unit,
     onMode: (AnswerMode) -> Unit, onAnswer: (String) -> Unit, onSubmit: () -> Unit,
-    onMicrophone: () -> Unit, onStop: () -> Unit, onRetry: () -> Unit, onNext: () -> Unit) {
+    onMicrophone: () -> Unit, onStop: () -> Unit, onRetry: () -> Unit, onNext: () -> Unit,
+    onSystemSpeech: (() -> Unit)? = null, openSpeechSettings: (() -> Unit)? = null) {
     val lesson = state.lesson ?: return
     val turn = state.turn ?: return
     var hint by rememberSaveable(lesson.id, state.turnIndex) { mutableStateOf(true) }
@@ -83,14 +84,16 @@ import vn.noi.english.ui.theme.*
                         Spacer(Modifier.height(6.dp))
                         Surface(color = Color(0xFFE8EDFC), shape = CircleShape) {
                             IconButton(onClick = if (state.audioPhase == AudioPhase.Listening) onStop else onMicrophone,
-                                enabled = !state.saving && state.audioPhase != AudioPhase.Processing,
+                                enabled = !state.saving && state.audioPhase in listOf(AudioPhase.Idle, AudioPhase.Listening),
                                 modifier = Modifier.padding(8.dp).size(76.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = Blue, contentColor = Color.White)) {
                                 Icon(if (state.audioPhase == AudioPhase.Listening) Icons.Outlined.Stop else Icons.Outlined.Mic,
                                     if (state.audioPhase == AudioPhase.Listening) "Dừng nói" else "Bắt đầu nói", Modifier.size(28.dp))
                             }
                         }
-                        Text(when(state.audioPhase) { AudioPhase.Idle -> "Chạm để bắt đầu nói"; AudioPhase.Listening -> "Đang nghe… Chạm để dừng"; AudioPhase.Processing -> "Đang nhận diện…" }, style = MaterialTheme.typography.titleMedium)
+                        Text(when(state.audioPhase) { AudioPhase.Idle -> "Chạm để bắt đầu nói"; AudioPhase.Preparing -> "Đang mở micro…"; AudioPhase.Listening -> "Đang nghe… Chạm để dừng"; AudioPhase.Processing -> "Đang nhận diện…" }, style = MaterialTheme.typography.titleMedium)
                         Muted("Cứ nói chậm thôi. Bạn có thể thử lại.")
+                        if (onSystemSpeech != null) TextButton(onSystemSpeech, enabled = !state.saving && state.audioPhase == AudioPhase.Idle) { Text("Nhận diện bằng Android") }
+                        if (state.message != null && openSpeechSettings != null) TextButton(openSpeechSettings, enabled = !state.saving && state.audioPhase == AudioPhase.Idle) { Text("Cài đặt nhận diện") }
                     }
                 }
                 AnswerMode.Choose -> turn.choices.forEach { choice ->

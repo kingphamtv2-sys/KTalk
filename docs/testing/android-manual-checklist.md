@@ -10,6 +10,10 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 - [x] Xem ảnh chụp trang từ vựng, thẻ đã lật và quiz từ APK chạy trên emulator.
 - [x] Cài đè 0.3.0 → 0.4.0 giữ cả 1/45 bài và 1 Đã nhớ/1 Cần ôn; tìm không dấu `ao mua`, xem ví dụ và lưu thêm từ; force-stop/mở lại giữ 1 Đã nhớ/2 Cần ôn.
 - [x] Xem ảnh chụp Vocabulary300 và thẻ mới có ví dụ Anh–Việt trên APK0.4.0.
+- [x] Cài đè0.4.0 →0.4.1 giữ1/45 bài và1 Đã nhớ/1 Cần ôn, đóng/mở lại vẫn giữ.
+- [x] Micro adapter thật trên emulator: nhận no-match7 sau ready, thông báo đúng, gõ vẫn kiểm tra được; không thử bằng giọng thật.
+- [x] Hộp thoại Android provider thật mở en-US, Back trả trạng thái hủy/Idle, không tự bật lại và vẫn thấy các nút phục hồi.
+- [ ] Thử bản0.4.1 trên Galaxy S9+ người dùng, ghi mã SR/SYS nếu lỗi tiếp diễn; chưa có thiết bị kết nối để kiểm chứng.
 - [ ] Mở thủ công đủ 15 chủ đề, 45 bài; từ vựng và hội thoại khác nhau theo từng bài (cấu trúc/đáp án của tất cả bài đã kiểm tra tự động).
 - [ ] Từ chối quyền micro, hoàn thành một bài bằng chọn/gõ.
 - [ ] Từ chối quyền vĩnh viễn, mở cài đặt rồi quay lại và thử nói.
@@ -26,4 +30,4 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 
 ## Tự động
 
-57 test JVM/Robolectric và 18 test trên emulator đều đạt cho bản 0.4.0. Giữ các hồi quy 45 bài, cỡ chữ lớn, bàn phím trên MainActivity thật, tạo lại Activity và DataStore bằng file thật. Bổ sung danh mục300, tìm Anh/Việt không dấu/đ, ví dụ, luân phiên10thẻ, quiz chống nghĩa tương đương, điều hướng khi ghi, matcher giữ phủ định, cuộn lên đầu mỗi lượt, lỗi và phục hồi giọng đọc. Lint 0 lỗi / 15 cảnh báo có sẵn; APK debug build thành công. Chi tiết trong README và báo cáo mở rộng từ vựng. Các mục thủ công được ghi riêng để tránh nhầm với chất lượng micro/TTS.
+84 test JVM/Robolectric và22 test emulator đạt cho0.4.1. Giữ hồi quy45bài/Vocabulary300; thêm nhận diện trên API28/35, timeout/cancel/stale callbacks, hệ mã lỗi native và activity riêng, launch guard foreground, UI Preparing/chữ lớn, ActivityResult trên MainActivity thật. Lint0 lỗi/16 cảnh báo; APK build thành công. Chi tiết trong README và báo cáo phục hồi micro. Test giả lập/ActivityMonitor không kiểm chứng chất lượng nhận diện/TTS bằng giọng nói thật.

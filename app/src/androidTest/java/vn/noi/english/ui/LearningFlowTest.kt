@@ -28,7 +28,8 @@ class LearningFlowTest {
     private var spokenText: String? = null
     private var audioStops = 0
     private fun launch(fontScale: Float = 1f, initial: Progress = Progress(), conversationReadFails: Boolean = false, vocabularyReadFails: Boolean = false,
-                       wordWriteGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null, wordWriteFails: Boolean = false): LearningViewModel {
+                       wordWriteGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null, wordWriteFails: Boolean = false,
+                       systemSpeech: (() -> Unit)? = null, speechSettings: (() -> Unit)? = null): LearningViewModel {
         val repo = object : ProgressRepository {
             val saved = MutableStateFlow(initial)
             override val progress = kotlinx.coroutines.flow.flow {
@@ -71,7 +72,8 @@ class LearningFlowTest {
         compose.setContent {
             val currentDensity = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(currentDensity.density, fontScale)) {
-                NoiTheme { NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}, vocabulary) }
+                NoiTheme { NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}, vocabulary,
+                    onSystemSpeech = systemSpeech, openSpeechSettings = speechSettings) }
             }
         }
         compose.waitUntil(5_000) { !vm.state.value.loading }
@@ -287,5 +289,28 @@ class LearningFlowTest {
         compose.onNodeWithText("Nghe từ").performScrollTo().performClick()
         compose.onNodeWithText("Chưa có giọng đọc").assertDoesNotExist()
         compose.runOnIdle { org.junit.Assert.assertEquals("Good morning", spokenText) }
+    }
+    @Test fun microphonePreparingIsNotListeningAndRecoveryControlsRemainUsable() {
+        var systemCalls = 0; var settingsCalls = 0
+        val vm = launch(fontScale = 2f, systemSpeech = { systemCalls++ }, speechSettings = { settingsCalls++ })
+        compose.onNodeWithText("Bắt đầu học").performScrollTo().performClick()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.runOnIdle { vm.setAudio(AudioPhase.Preparing) }
+        compose.onNodeWithText("Đang mở micro…").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithContentDescription("Bắt đầu nói").assertIsNotEnabled()
+        compose.onNodeWithText("Đang nghe… Chạm để dừng").assertDoesNotExist()
+        compose.runOnIdle { vm.message("Bộ nhận diện chưa mở được phiên nghe (SR-5).") }
+        compose.onNodeWithText("Cài đặt nhận diện").performScrollTo().performClick()
+        compose.onNodeWithText("Nhận diện bằng Android").performScrollTo().performClick()
+        compose.runOnIdle {
+            org.junit.Assert.assertEquals(1, settingsCalls); org.junit.Assert.assertEquals(1, systemCalls)
+            org.junit.Assert.assertEquals(0, vm.state.value.turnIndex)
+            org.junit.Assert.assertEquals(Feedback.None, vm.state.value.feedback)
+        }
+        compose.onNodeWithText("Gõ").performScrollTo().performClick()
+        compose.onNodeWithTag("answer-input").performTextInput("Good morning")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Kiểm tra câu trả lời").performScrollTo().performClick()
+        compose.onNodeWithText("✓ Câu trả lời phù hợp!").assertExists()
     }
 }

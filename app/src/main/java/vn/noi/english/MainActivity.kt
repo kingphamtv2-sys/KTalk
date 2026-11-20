@@ -40,19 +40,40 @@ class MainActivity : ComponentActivity() {
     private lateinit var output: AndroidSpeechOutput
     private var permissionDialog by mutableStateOf(false)
     private var pendingTurn: String? = null
+    private val systemSpeech = SystemSpeechRequest()
+    private var resumed = false
     private fun turnKey() = "${vm.state.value.lessonId}:${vm.state.value.turnIndex}"
+    private fun canAcceptSpeech(): Boolean = vm.state.value.let {
+        it.screen == Screen.Conversation && it.mode == AnswerMode.Speak && !it.saving && it.feedback != Feedback.Accepted
+    }
+    private val systemSpeechLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val recognized = systemSpeech.consume(turnKey(), canAcceptSpeech(), result.resultCode, result.data)
+        if (recognized != SystemSpeechResult.Ignored) vm.setAudio(AudioPhase.Idle)
+        when (recognized) {
+            is SystemSpeechResult.Text -> { vm.message(null); vm.setAnswer(recognized.value) }
+            is SystemSpeechResult.Failure -> vm.message(recognized.message)
+            SystemSpeechResult.Cancelled -> vm.message("Bạn đã dừng nhận diện. Chạm micro để thử lại hoặc tiếp tục bằng chọn / gõ.")
+            SystemSpeechResult.Empty -> vm.message("Chưa nhận được câu tiếng Anh. Bạn có thể thử lại hoặc chọn / gõ để tiếp tục.")
+            SystemSpeechResult.Ignored -> Unit
+        }
+    }
     private val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted && pendingTurn == turnKey() && vm.state.value.screen == Screen.Conversation && vm.state.value.mode == AnswerMode.Speak) beginListening()
+        if (granted && pendingTurn == turnKey() && canAcceptSpeech()) {
+            if (resumed && hasWindowFocus()) beginListening()
+            else vm.message("Đã cấp quyền micro. Chạm micro để bắt đầu nói.")
+        }
         else if (!granted) vm.message("Micro chưa được cấp quyền. Bạn vẫn có thể chọn hoặc gõ câu trả lời.")
         pendingTurn = null
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        input = AndroidSpeechInput(this); output = AndroidSpeechOutput(this)
+        systemSpeech.restore(savedInstanceState?.getString("system_speech_turn"))
+        input = AndroidSpeechInput(this) { launchSystemSpeech(showUnavailable = false, automatic = true) }; output = AndroidSpeechOutput(this)
         setContent {
             NoiTheme {
-                NoiApp(vm, input, output, ::requestMicrophone, ::openVoiceSettings, vocabularyVm)
+                NoiApp(vm, input, output, ::requestMicrophone, ::openVoiceSettings, vocabularyVm,
+                    onSystemSpeech = { launchSystemSpeech() }, openSpeechSettings = ::openRecognitionSettings)
                 if (permissionDialog) {
                     val askedBefore = getPreferences(MODE_PRIVATE).getBoolean("asked_microphone", false)
                     val permanentlyDenied = askedBefore && !shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)
@@ -77,13 +98,41 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun requestMicrophone() {
-        if (!input.available) { vm.message("Thiết bị chưa có dịch vụ nhận diện giọng nói. Bạn vẫn có thể chọn hoặc gõ để học."); return }
+        if (!canAcceptSpeech() || systemSpeech.pendingTurn != null || vm.state.value.audioPhase != AudioPhase.Idle) return
+        vm.message(null)
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) beginListening()
         else permissionDialog = true
     }
     private fun beginListening() {
+        if (!canAcceptSpeech() || systemSpeech.pendingTurn != null) return
         output.stop()
         input.start({ vm.setAnswer(it) }, { vm.message(it) }, { vm.setAudio(it) })
+    }
+    private fun launchSystemSpeech(showUnavailable: Boolean = true, automatic: Boolean = false): Boolean {
+        if (!canAcceptSpeech()) return false
+        if (systemSpeech.pendingTurn != null) return true
+        input.cancel(); output.stop(); vm.message(null)
+        val intent = systemSpeech.begin(turnKey(), automatic, resumed, hasWindowFocus()) ?: return false
+        return try {
+            vm.setAudio(AudioPhase.Preparing)
+            systemSpeechLauncher.launch(intent)
+            true
+        } catch (_: Exception) {
+            systemSpeech.cancel(); vm.setAudio(AudioPhase.Idle)
+            if (showUnavailable) vm.message("Máy chưa mở được ứng dụng nhận diện giọng nói. Hãy bật hoặc cập nhật dịch vụ nhận diện có tiếng Anh trong Cài đặt; bạn vẫn có thể chọn / gõ.")
+            false
+        }
+    }
+    private fun openRecognitionSettings() {
+        input.cancel(); output.stop(); vm.setAudio(AudioPhase.Idle)
+        val intent = if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        else Intent(Settings.ACTION_VOICE_INPUT_SETTINGS)
+        try { startActivity(intent) }
+        catch (_: Exception) {
+            try { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+            catch (_: Exception) { vm.message("Bạn hãy mở Cài đặt điện thoại để kiểm tra quyền micro và dịch vụ nhận diện tiếng Anh.") }
+        }
     }
     private fun openVoiceSettings() {
         try { startActivity(Intent("com.android.settings.TTS_SETTINGS")) }
@@ -95,7 +144,23 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        resumed = true
         output.refresh()
     }
+    override fun onPause() {
+        resumed = false
+        input.cancel(); output.stop(); vm.setAudio(AudioPhase.Idle)
+        super.onPause()
+    }
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus && ::input.isInitialized && ::output.isInitialized) {
+            input.cancel(); output.stop(); vm.setAudio(AudioPhase.Idle)
+        }
+    }
     override fun onDestroy() { input.close(); output.close(); super.onDestroy() }
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("system_speech_turn", systemSpeech.pendingTurn)
+        super.onSaveInstanceState(outState)
+    }
 }

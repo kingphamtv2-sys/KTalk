@@ -1,6 +1,6 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
-Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.4.0 với 45 bài và 300 mục từ vựng**: [KTalk-0.4.0-300-vocabulary.apk](releases/KTalk-0.4.0-300-vocabulary.apk).
+Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.4.1 — sửa phục hồi micro**, giữ 45 bài và 300 mục từ vựng: [KTalk-0.4.1-microphone-fix.apk](releases/KTalk-0.4.1-microphone-fix.apk).
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
@@ -45,11 +45,13 @@ adb shell am start -n vn.noi.english/.MainActivity
 
 Đây là bản debug để thử nghiệm, chưa phải gói phát hành Play Store.
 
-Bản 0.4.0 dùng cùng package và chữ ký debug với bản cũ. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Chi tiết kiểm chứng và hình ảnh: [báo cáo mở rộng 300 từ](docs/vocabulary-expansion-report.md).
+Bản 0.4.1 dùng cùng package và chữ ký debug với bản cũ. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử 0.4.0 → 0.4.1 giữ cả tiến độ hội thoại và từ vựng sau khi mở lại. Chi tiết: [báo cáo phục hồi micro](docs/microphone-recovery-report.md); [báo cáo mở rộng 300 từ](docs/vocabulary-expansion-report.md).
 
 ## Nhận diện, giọng đọc và dữ liệu
 
 Luyện nói cần dịch vụ nhận diện tiếng Anh tương thích Android SpeechRecognizer trên điện thoại; dịch vụ này có thể dùng Internet. Cấp quyền micro khi bạn muốn nói; từ chối quyền vẫn học được bằng chọn/gõ. Khi máy chưa nghe rõ hoặc dịch vụ lỗi, ứng dụng thông báo riêng, không đánh dấu câu trả lời sai.
+
+Bản 0.4.1 chỉ báo Đang nghe khi micro đã sẵn sàng. Nếu bộ nhận diện nhúng không khởi động được, thử hộp thoại nhận diện của Android một lần; có thể chủ động bấm **Nhận diện bằng Android** hoặc **Cài đặt nhận diện** khi gặp lỗi. Hộp thoại hệ thống chỉ điền văn bản để bạn sửa/kiểm tra, không tự chấm. Lỗi có mã SR/SYS giúp gửi lại thông tin; không lưu hoặc log lời nói. Rời app/mất focus sẽ dừng phiên nhúng, quay lại không tự bật micro.
 
 Nghe mẫu dùng Android TextToSpeech với giọng en-US. Nếu thiếu giọng/engine, dùng nút **Cài giọng** hoặc tìm **Chuyển văn bản thành giọng nói** trong cài đặt điện thoại. Không cam kết micro hoặc đọc mẫu hoạt động ngoại tuyến.
 
@@ -70,7 +72,7 @@ Unit tests bao phủ nội dung, đáp án, khôi phục, ghi lỗi, đọc lỗ
 
 Robolectric kiểm tra được tương tác Compose nhưng không thay cho thử giọng nói thực tế. Checklist thủ công: [android-manual-checklist.md](docs/testing/android-manual-checklist.md).
 
-Kết quả đã xác minh cho bản 0.4.0: **57/57 test JVM/Robolectric, 18/18 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 15 cảnh báo có sẵn**. Bao gồm toàn bộ hồi quy cũ, danh mục 300, tìm không dấu, ví dụ/nghe, luân phiên thẻ, đáp án gần nghĩa, dạng viết tắt hợp lệ, cuộn lượt hội thoại và phục hồi adapter TTS sau cài giọng. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết: [báo cáo mở rộng từ vựng](docs/vocabulary-expansion-report.md); [báo cáo Vocabulary 0.3.0](docs/vocabulary-report.md).
+Kết quả đã xác minh cho bản 0.4.1: **84/84 test JVM/Robolectric, 22/22 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 16 cảnh báo** (15 có sẵn và 1 gợi ý KTX tương tự). Test nhận diện chạy trên Robolectric API28 và35, gồm lỗi khởi động, timeout/cancel, intent/result hệ thống và launch guard. Giữ toàn bộ hồi quy 45 bài, danh mục300 và tính năng Vocabulary. Chưa kiểm chứng bằng micro thật trên Galaxy S9+; không khẳng định đã biết engine/mã lỗi của máy đó. Chi tiết: [báo cáo phục hồi micro](docs/microphone-recovery-report.md).
 
 ## Cấu trúc
 

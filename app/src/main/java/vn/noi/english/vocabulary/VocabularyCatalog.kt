@@ -5,30 +5,41 @@ import java.util.Locale
 import vn.noi.english.content.Curriculum
 import vn.noi.english.content.Topic
 
-data class WordCard(val id: String, val english: String, val meanings: List<String>, val topicIds: Set<String>, val lessonIds: Set<String>)
+internal fun vocabularyWordId(english: String): String = "word:" + english.trim().lowercase(Locale.ROOT)
+    .replace('’', '\'').replace("…", "...").replace(Regex("\\s+"), " ")
+
+data class WordExample(val english: String, val vietnamese: String)
+data class WordCard(val id: String, val english: String, val meanings: List<String>, val topicIds: Set<String>, val lessonIds: Set<String>, val example: WordExample? = null)
 data class QuizQuestion(val card: WordCard, val correctMeaning: String, val options: List<String>)
 object VocabularyCatalog {
     private data class Source(val english: String, val meaning: String, val topicId: String, val lessonId: String)
-    val cards: List<WordCard> = fromTopics(Curriculum.topics)
+    val cards: List<WordCard> = (fromTopics(Curriculum.topics) + EverydayVocabulary.cards).groupBy { it.id }.map { (_, sources) ->
+        sources.first().copy(meanings = sources.flatMap { it.meanings }.distinct(), topicIds = sources.flatMap { it.topicIds }.toSet(),
+            lessonIds = sources.flatMap { it.lessonIds }.toSet(), example = sources.firstNotNullOfOrNull { it.example })
+    }
     fun fromTopics(topics: List<Topic>): List<WordCard> = topics.flatMap { topic -> topic.lessons.flatMap { lesson ->
         lesson.vocabulary.map { Source(it.english.trim(), it.vietnamese.trim(), topic.id, lesson.id) }
     } }.groupBy { wordId(it.english) }.map { (id, sources) ->
         WordCard(id, sources.first().english, sources.map { it.meaning }.distinct(), sources.map { it.topicId }.toSet(), sources.map { it.lessonId }.toSet())
     }
-    fun wordId(english: String): String = "word:" + english.trim().lowercase(Locale.ROOT)
-        .replace('’', '\'').replace("…", "...").replace(Regex("\\s+"), " ")
+    fun wordId(english: String): String = vocabularyWordId(english)
     private fun meaningKey(text: String) = text.lowercase(Locale.ROOT).replace(Regex("[\\p{P}\\s]+"), " ").trim()
     private val stopWords = setOf("tôi", "bạn", "của", "một", "các", "những", "là", "ở", "và", "hoặc", "cho", "với", "để", "vào", "khi", "sự", "cái", "chiếc", "người")
     // These translations overlap in ordinary usage even without common Vietnamese tokens.
-    private val confusableGroups = listOf(setOf("This is…", "My name is…"), setOf("receipt", "the bill"))
+    private val confusableGroups = listOf(setOf("This is…", "My name is…"), setOf("receipt", "the bill"),
+        setOf("Could you repeat that?", "One more time, please", "repeat"), setOf("hold on", "Wait a moment, please"),
+        setOf("a seat", "a chair"), setOf("Goodbye", "See you later", "See you tomorrow"))
         .map { group -> group.map(::wordId).toSet() }
+    internal fun distractorCards(card: WordCard): List<WordCard> {
+        val confusable = confusableGroups.filter { card.id in it }.flatten().toSet()
+        return cards.filter { it.id != card.id && it.id !in confusable }
+    }
     private fun contentWords(text: String) = meaningKey(text).split(' ').filter { it.isNotBlank() && it !in stopWords }.toSet()
     /** Caller orders eligible cards by review priority; randomness only chooses/reorders options. */
     fun quiz(eligible: List<WordCard>, random: Random): List<QuizQuestion> = eligible.distinctBy { it.id }.take(5).mapNotNull { card ->
         val knownMeanings = card.meanings.map(::meaningKey).toSet()
         val knownWords = card.meanings.flatMap { contentWords(it) }.toSet()
-        val confusable = confusableGroups.filter { card.id in it }.flatten().toSet()
-        val wrong = cards.filter { it.id != card.id && it.id !in confusable }.flatMap { it.meanings }
+        val wrong = distractorCards(card).flatMap { it.meanings }
             .distinctBy(::meaningKey)
             .filter { meaningKey(it) !in knownMeanings && contentWords(it).intersect(knownWords).isEmpty() }
             .shuffled(random).take(3)

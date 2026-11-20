@@ -61,6 +61,10 @@ import vn.noi.english.vocabulary.*
 @Composable private fun VocabularyHome(state: VocabularyState, model: VocabularyViewModel) {
     var menuOpen by remember { mutableStateOf(false) }
     val topicName = Curriculum.topics.find { it.id == state.topicId }?.title ?: "Tất cả chủ đề"
+    OutlinedTextField(state.query, model::setQuery, modifier = Modifier.fillMaxWidth().testTag("vocabulary-search"),
+        label = { Text("Tìm từ tiếng Anh hoặc nghĩa Việt") }, placeholder = { Text("Ví dụ: water, nước, ao mua") },
+        singleLine = true, shape = RoundedCornerShape(12.dp))
+    if (state.query.isNotEmpty()) TextButton({ model.setQuery("") }) { Text("Xóa tìm kiếm") }
     Box {
         OutlinedButton({ menuOpen = true }, Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(12.dp)) { Text(topicName) }
         DropdownMenu(menuOpen, { menuOpen = false }, Modifier.heightIn(max = 320.dp)) {
@@ -74,15 +78,20 @@ import vn.noi.english.vocabulary.*
         Muted("Cần ôn: ${state.reviewCount} · Chưa học: ${state.unseenCount}")
         Text("Mức nhớ do bạn tự đánh giá sau khi xem thẻ.", style = MaterialTheme.typography.bodySmall, color = Subtle)
     }
-    MainButton("Học thẻ từ", onClick = { model.startCards() })
+    if (state.eligible.isEmpty()) {
+        Text("Không tìm thấy từ phù hợp.", style = MaterialTheme.typography.titleMedium)
+        Muted("Hãy thử từ khóa khác hoặc chọn tất cả chủ đề. Bạn có thể gõ nghĩa tiếng Việt không dấu.")
+    }
+    Muted("Mỗi lượt tối đa 10 thẻ. Ưu tiên từ cần ôn và từ chưa học. Thống kê theo kết quả đang lọc.")
+    MainButton("Học thẻ từ", enabled = state.eligible.isNotEmpty(), onClick = { model.startCards() })
     SecondaryButton("Ôn từ cần nhớ", enabled = state.reviewCount > 0, onClick = { model.startCards(reviewOnly = true) })
     Spacer(Modifier.height(8.dp))
     Panel(Color(0xFFEEF2FA), false) {
         Text("Một lượt ôn thật ngắn", style = MaterialTheme.typography.titleMedium)
         Muted("Chọn nghĩa tiếng Việt cho tối đa 5 từ. Ưu tiên từ cần ôn và từ chưa học trong chủ đề đang chọn.")
-        MainButton("Kiểm tra nhanh", onClick = model::startQuiz)
+        MainButton("Kiểm tra nhanh", enabled = state.eligible.isNotEmpty(), onClick = model::startQuiz)
     }
-    Muted("${VocabularyCatalog.cards.size} mục từ và cụm từ từ ${Curriculum.lessons.size} bài hội thoại. Những mục có cùng tiếng Anh được gộp lại khi xuất hiện ở nhiều bài.")
+    Muted("${VocabularyCatalog.cards.size} mục từ và cụm từ trong ${Curriculum.topics.size} chủ đề, gồm từ trong ${Curriculum.lessons.size} bài hội thoại và từ mở rộng có ví dụ Anh–Việt.")
     Muted("Tiến độ từ vựng lưu riêng trên điện thoại, không làm thay đổi số bài hội thoại đã hoàn thành.")
 }
 
@@ -95,8 +104,19 @@ import vn.noi.english.vocabulary.*
         if (state.revealed) {
             HorizontalDivider(color = Line)
             card.meanings.forEach { meaning -> Text(meaning, style = MaterialTheme.typography.bodyLarge) }
-            val sourceTitles = card.lessonIds.mapNotNull { Curriculum.lesson(it)?.title }.take(2).joinToString("; ")
-            Muted("Gặp trong bài: $sourceTitles")
+            if (card.lessonIds.isNotEmpty()) {
+                val sourceTitles = card.lessonIds.mapNotNull { Curriculum.lesson(it)?.title }.take(2).joinToString("; ")
+                Muted("Gặp trong bài: $sourceTitles")
+            } else {
+                Muted("Chủ đề: " + Curriculum.topics.filter { it.id in card.topicIds }.joinToString { it.title })
+            }
+            card.example?.let { example ->
+                HorizontalDivider(color = Line)
+                Eyebrow("Dùng trong giao tiếp")
+                Text(example.english, style = MaterialTheme.typography.titleMedium)
+                Muted(example.vietnamese)
+                AudioButton("Nghe ví dụ") { onSpeak(example.english) }
+            }
         } else {
             Muted("Thử nhớ nghĩa trước khi lật thẻ.")
             MainButton("Xem nghĩa", onClick = model::reveal)

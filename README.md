@@ -1,6 +1,6 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
-Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.3.0 với 45 bài và Vocabulary**: [KTalk-0.3.0-vocabulary.apk](releases/KTalk-0.3.0-vocabulary.apk).
+Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.4.0 với 45 bài và 300 mục từ vựng**: [KTalk-0.4.0-300-vocabulary.apk](releases/KTalk-0.4.0-300-vocabulary.apk).
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
@@ -12,7 +12,8 @@ Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh la
 - Nói qua micro, xem/sửa kết quả nhận diện trước khi kiểm tra; luôn có chế độ chọn hoặc gõ.
 - Nghe câu hỏi, cụm từ và câu trả lời mẫu bằng giọng tiếng Anh trên thiết bị.
 - Tiến độ lưu bằng DataStore trên điện thoại, tiếp tục bài chưa học xong, học lại không đếm trùng.
-- Tab **Từ vựng** riêng: 135 thẻ từ/cụm từ, nghe tiếng Anh, lật nghĩa tiếng Việt và tự đánh dấu **Đã nhớ / Cần ôn**. Lọc theo chủ đề hoặc chỉ ôn các từ cần nhớ.
+- Tab **Từ vựng** riêng: 300 thẻ từ/cụm từ trong 15 chủ đề, nghe tiếng Anh, lật nghĩa tiếng Việt và tự đánh dấu **Đã nhớ / Cần ôn**. Giữ 135 mục gốc, thêm [165 mục có câu ví dụ Anh–Việt](docs/content/165-vocabulary-expansion.md) và nghe ví dụ.
+- Tìm theo tiếng Anh hoặc nghĩa Việt, hỗ trợ tiếng Việt không dấu; kết hợp bộ lọc chủ đề hoặc chỉ ôn các từ cần nhớ. Mỗi lượt tối đa 10 thẻ, ưu tiên từ Cần ôn rồi Chưa học.
 - **Kiểm tra nhanh** tối đa 5 câu, mỗi câu 4 lựa chọn nghĩa tiếng Việt; ưu tiên từ cần ôn và chưa học. Quiz chỉ tính điểm của lượt hiện tại, không tự đổi mức nhớ.
 - Không cần tài khoản, API key hoặc backend; chưa có trò chuyện AI tự do hoặc chấm phát âm.
 
@@ -44,7 +45,7 @@ adb shell am start -n vn.noi.english/.MainActivity
 
 Đây là bản debug để thử nghiệm, chưa phải gói phát hành Play Store.
 
-Bản 0.3.0 dùng cùng package và chữ ký debug với bản cũ. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Chi tiết kiểm chứng và hình ảnh của chế độ mới: [báo cáo Vocabulary](docs/vocabulary-report.md).
+Bản 0.4.0 dùng cùng package và chữ ký debug với bản cũ. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Chi tiết kiểm chứng và hình ảnh: [báo cáo mở rộng 300 từ](docs/vocabulary-expansion-report.md).
 
 ## Nhận diện, giọng đọc và dữ liệu
 
@@ -55,6 +56,8 @@ Nghe mẫu dùng Android TextToSpeech với giọng en-US. Nếu thiếu giọng
 Ứng dụng lưu mã bài đã hoàn thành và vị trí bài/lượt gần nhất. Mức nhớ từ vựng được lưu trong DataStore riêng, không thay đổi số bài hội thoại đã hoàn thành. Kết quả quiz không lưu sau khi đóng ứng dụng. Không lưu file thu âm hoặc lịch sử câu trả lời. Dịch vụ nhận diện của thiết bị có thể xử lý giọng nói qua mạng theo chính sách của dịch vụ đó. Tiến độ chưa đồng bộ giữa thiết bị; xóa dữ liệu hoặc gỡ app có thể làm mất tiến độ. Sao lưu tự động của ứng dụng đã tắt.
 
 Kiểm tra câu trả lời chỉ so với biến thể được soạn sẵn và một số cấu trúc có chỗ điền. Một câu tiếng Anh đúng nhưng nằm ngoài mẫu vẫn có thể được đề nghị thử theo mẫu; kết quả không phải đánh giá toàn diện ngữ pháp/phát âm.
+
+Bản 0.4.0 nhận thêm các dạng đầy đủ tương đương với viết tắt thông dụng, như `I'll` / `I will`, vẫn giữ từ phủ định khi so khớp. Khi sang lượt hội thoại, trang cuộn về đầu để thấy câu hỏi mới. Thử nghe lại sẽ xóa thông báo lỗi giọng đọc trước đó.
 
 ## Kiểm thử
 
@@ -67,7 +70,7 @@ Unit tests bao phủ nội dung, đáp án, khôi phục, ghi lỗi, đọc lỗ
 
 Robolectric kiểm tra được tương tác Compose nhưng không thay cho thử giọng nói thực tế. Checklist thủ công: [android-manual-checklist.md](docs/testing/android-manual-checklist.md).
 
-Kết quả đã xác minh cho bản 0.3.0: **41/41 test JVM/Robolectric, 14/14 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 15 cảnh báo có sẵn**. Bao gồm thẻ từ, quiz, lỗi đọc/ghi, kho tiến độ độc lập và chặn chuyển tab khi đang lưu. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết: [báo cáo Vocabulary](docs/vocabulary-report.md); [báo cáo mở rộng 45 bài trước đó](docs/45-lessons-report.md).
+Kết quả đã xác minh cho bản 0.4.0: **57/57 test JVM/Robolectric, 18/18 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 15 cảnh báo có sẵn**. Bao gồm toàn bộ hồi quy cũ, danh mục 300, tìm không dấu, ví dụ/nghe, luân phiên thẻ, đáp án gần nghĩa, dạng viết tắt hợp lệ, cuộn lượt hội thoại và phục hồi adapter TTS sau cài giọng. Chưa kiểm chứng chất lượng micro/TTS trên điện thoại thật. Chi tiết: [báo cáo mở rộng từ vựng](docs/vocabulary-expansion-report.md); [báo cáo Vocabulary 0.3.0](docs/vocabulary-report.md).
 
 ## Cấu trúc
 

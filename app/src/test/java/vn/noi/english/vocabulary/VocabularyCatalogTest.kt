@@ -10,7 +10,7 @@ class VocabularyCatalogTest {
     @Test fun repeatedWordsAreMergedWithoutLosingMeaningsOrSources() {
         val cards = VocabularyCatalog.cards
         assertTrue(cards.isNotEmpty())
-        assertTrue(cards.size <= 135)
+        assertEquals(300, cards.size)
         assertEquals(cards.size, cards.map { it.id }.toSet().size)
         val morning = cards.single { it.english == "Good morning" }
         assertTrue(morning.meanings.contains("Chào buổi sáng"))
@@ -57,5 +57,48 @@ class VocabularyCatalogTest {
             val question = VocabularyCatalog.quiz(listOf(card), Random(seed)).single()
             assertTrue("Ambiguous meanings for $english: ${question.options}", question.options.none { it in other.meanings })
         }
+    }
+    @Test fun expandedCatalogKeepsEveryOldWordAndAddsElevenExamplesPerTopic() {
+        val original = VocabularyCatalog.fromTopics(Curriculum.topics)
+        assertEquals(135, original.size)
+        val originals = original.map { it.id }.toSet()
+        val added = VocabularyCatalog.cards.filter { it.id !in originals }
+        assertEquals(165, added.size)
+        Curriculum.topics.forEach { topic ->
+            assertEquals(topic.id, 20, VocabularyCatalog.cards.count { topic.id in it.topicIds })
+        }
+        added.forEach { card ->
+            assertTrue(card.english, card.meanings.all { it.isNotBlank() })
+            assertTrue(card.english, card.lessonIds.isEmpty())
+            assertEquals(1, card.topicIds.size)
+            assertNotNull(card.english, card.example)
+            assertTrue(card.example!!.english.isNotBlank())
+            assertTrue(card.example.vietnamese.isNotBlank())
+        }
+        original.forEach { old ->
+            val current = VocabularyCatalog.cards.single { it.id == old.id }
+            assertEquals(old, current)
+        }
+    }
+    @Test fun everyExpandedCardHasFourDistinctSafeQuizOptionsAcrossSeeds() {
+        VocabularyCatalog.cards.forEach { card -> repeat(5) { seed ->
+            val q = VocabularyCatalog.quiz(listOf(card), Random(seed)).single()
+            assertEquals(card.id, q.card.id)
+            assertEquals(4, q.options.toSet().size)
+            assertEquals(1, q.options.count { it in card.meanings })
+        } }
+    }
+    @Test fun quizExcludesEquivalentConversationalTranslationsInBothDirections() {
+        val pairs = listOf("Could you repeat that?" to "One more time, please", "hold on" to "Wait a moment, please",
+            "a seat" to "a chair", "Goodbye" to "See you later")
+        pairs.forEach { (first, second) -> listOf(first to second, second to first).forEach { (word, equivalent) ->
+            val card = VocabularyCatalog.cards.single { it.english == word }
+            val other = VocabularyCatalog.cards.single { it.english == equivalent }
+            assertFalse(VocabularyCatalog.distractorCards(card).contains(other))
+            repeat(200) { seed ->
+                val q = VocabularyCatalog.quiz(listOf(card), Random(seed)).single()
+                assertTrue("$word / $equivalent, seed$seed: ${q.options}", q.options.none { it in other.meanings })
+            }
+        } }
     }
 }

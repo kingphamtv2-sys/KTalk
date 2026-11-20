@@ -17,6 +17,7 @@ interface SpeechOutput {
     fun close()
 }
 class AndroidSpeechOutput(context: Context) : SpeechOutput {
+    private val app = context.applicationContext
     private val mutable = MutableStateFlow(VoiceState.Initializing)
     override val status: StateFlow<VoiceState> = mutable
     private var engine: TextToSpeech? = null
@@ -25,11 +26,15 @@ class AndroidSpeechOutput(context: Context) : SpeechOutput {
     private var utteranceId: String? = null
     private var errorCallback: ((String) -> Unit)? = null
     private var sequence = 0L
-    init {
+    private var generation = 0L
+    init { initialize() }
+    private fun initialize() {
+        val activeGeneration = ++generation
+        mutable.value = VoiceState.Initializing
         try {
-            engine = TextToSpeech(context.applicationContext) { result -> handler.post {
-                if (!closed) {
-                    val language = if (result == TextToSpeech.SUCCESS) engine?.setLanguage(Locale.US) else null
+            engine = TextToSpeech(app) { result -> handler.post {
+                if (!closed && activeGeneration == generation) {
+                    val language = try { if (result == TextToSpeech.SUCCESS) engine?.setLanguage(Locale.US) else null } catch (_: Exception) { null }
                     mutable.value = if (language != null && language >= TextToSpeech.LANG_AVAILABLE) VoiceState.Ready else VoiceState.Unavailable
                     engine?.setSpeechRate(0.85f)
                 }
@@ -39,10 +44,16 @@ class AndroidSpeechOutput(context: Context) : SpeechOutput {
                 override fun onDone(id: String?) = Unit
                 @Deprecated("Android callback")
                 override fun onError(id: String?) { handler.post {
-                    if (!closed && utteranceId == id) errorCallback?.invoke("Chưa phát được câu mẫu. Hãy kiểm tra giọng tiếng Anh trong cài đặt giọng đọc.")
+                    if (!closed && activeGeneration == generation && utteranceId == id) errorCallback?.invoke("Chưa phát được câu mẫu. Hãy kiểm tra giọng tiếng Anh trong cài đặt giọng đọc.")
                 } }
             })
         } catch (_: Exception) { mutable.value = VoiceState.Unavailable }
+    }
+    /** Rebind the currently selected engine after returning from system voice settings. */
+    fun refresh() {
+        if (closed || status.value == VoiceState.Initializing) return
+        stop(); engine?.shutdown(); engine = null
+        initialize()
     }
     override fun speak(text: String, onError: (String) -> Unit) {
         if (closed || status.value != VoiceState.Ready) {

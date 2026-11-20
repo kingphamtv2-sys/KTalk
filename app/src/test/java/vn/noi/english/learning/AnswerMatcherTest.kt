@@ -6,6 +6,30 @@ import vn.noi.english.content.Curriculum
 import vn.noi.english.content.Turn
 
 class AnswerMatcherTest {
+    @Test fun fullFormsMatchRealLessonContractionsWithoutDroppingNegation() {
+        val song = Curriculum.lessons.flatMap { it.turns }.single { it.sample == "Sure, I'll send you a song." }
+        assertTrue(AnswerMatcher.matches("Sure, I will send you a song.", song))
+        assertFalse(AnswerMatcher.matches("Sure, I will not send you a song.", song))
+        val negative = song.copy(accepted = listOf("I can't come today."), slotPatterns = emptyList())
+        assertTrue(AnswerMatcher.matches("I cannot come today.", negative))
+        assertTrue(AnswerMatcher.matches("I can not come today.", negative))
+        assertFalse(AnswerMatcher.matches("I can come today.", negative))
+        val plural = song.copy(accepted = listOf("We're ready. You're welcome."), slotPatterns = emptyList())
+        assertTrue(AnswerMatcher.matches("We are ready. You are welcome.", plural))
+    }
+    @Test fun contractionsRequireAFollowingPredicateButTerminalNegativesAreValid() {
+        fun turn(id: String) = Curriculum.lessons.flatMap { it.turns }.single { it.id == id }
+        assertFalse(AnswerMatcher.matches("Yes, we're.", turn("time-clock-3")))
+        assertFalse(AnswerMatcher.matches("Sure, I'll.", turn("weather-clothes-4")))
+        assertFalse(AnswerMatcher.matches("Here you're.", turn("hotel-check-in-3")))
+        assertTrue(AnswerMatcher.matches("There's a book inside.", turn("help-lost-bag-3")))
+        assertTrue(AnswerMatcher.matches("Thank you. Where's the elevator?", turn("hotel-check-in-4")))
+        assertTrue(AnswerMatcher.matches("She's Linh.", turn("family-photo-2")))
+        assertFalse(AnswerMatcher.matches("She is not Linh.", turn("family-photo-2")))
+        val negative = nameTurn.copy(accepted = listOf("I cannot."), slotPatterns = emptyList())
+        assertTrue(AnswerMatcher.matches("I can't.", negative))
+        assertFalse(AnswerMatcher.matches("I can.", negative))
+    }
     private val nameTurn = Turn("name", "What's your name?", "Bạn tên gì?", "My name is…", "My name is Linh.", "Giới thiệu tên", listOf("My name is Linh."), listOf("My name is Linh."), listOf("(?:my name is|i am) [\\p{L}]+(?: [\\p{L}]+){0,3}"))
     @Test fun acceptsNamesAndContractions() {
         listOf("My name is Ngọc Anh.", "I’m Linh!", "I am Linh", "  MY  NAME IS  LINH. ").forEach {

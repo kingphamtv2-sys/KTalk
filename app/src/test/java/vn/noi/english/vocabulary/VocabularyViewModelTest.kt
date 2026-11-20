@@ -106,6 +106,66 @@ class VocabularyViewModelTest {
         assertEquals(reviewCard.id, vm.state.value.questions.first().card.id)
         assertTrue(vm.state.value.questions.all { "family" in it.card.topicIds })
     }
+    @Test fun searchCombinesTopicAndAccentInsensitiveEnglishOrVietnamese() = runTest(dispatcher) {
+        val vm = VocabularyViewModel(FakeWords()); runCurrent()
+        vm.setQuery("  DIEN THOAI  ")
+        assertTrue(vm.state.value.eligible.any { it.english == "phone number" })
+        vm.selectTopic("phone")
+        assertTrue(vm.state.value.eligible.all { "phone" in it.topicIds })
+        assertTrue(vm.state.value.eligible.none { it.english == "phone number" })
+        vm.setQuery("  SEND   A PHOTO ")
+        assertEquals("send a photo", vm.state.value.eligible.single().english)
+        vm.setQuery("gửi một bức ảnh")
+        assertEquals("send a photo", vm.state.value.eligible.single().english)
+        vm.setQuery("khong co ket qua nay")
+        assertTrue(vm.state.value.eligible.isEmpty())
+        vm.startCards(); vm.startQuiz()
+        assertEquals(VocabularyPage.Home, vm.state.value.page)
+        vm.setQuery(""); assertEquals(20, vm.state.value.eligible.size)
+    }
+    @Test fun shortSessionPrioritizesReviewThenUnseenAndDoesNotMarkSkippedWords() = runTest(dispatcher) {
+        val review = VocabularyCatalog.cards.last().id
+        val known = VocabularyCatalog.cards.first().id
+        val repo = FakeWords(VocabularyProgress(known = setOf(known), review = setOf(review)))
+        val vm = VocabularyViewModel(repo); runCurrent(); vm.startCards()
+        assertEquals(10, vm.state.value.sessionCards.size)
+        assertEquals(review, vm.state.value.sessionCards.first().id)
+        assertTrue(vm.state.value.sessionCards.none { it.id == known })
+        repeat(10) { vm.nextCard() }
+        assertEquals(VocabularyPage.CardsDone, vm.state.value.page)
+        assertEquals(VocabularyProgress(known = setOf(known), review = setOf(review)), repo.saved.value)
+    }
+    @Test fun searchIsLockedDuringSessionAndSaveButCanBeClearedAfterReturningHome() = runTest(dispatcher) {
+        val vm = VocabularyViewModel(FakeWords()); runCurrent()
+        vm.setQuery("raincoat"); vm.startCards(); vm.setQuery("water")
+        assertEquals("raincoat", vm.state.value.query)
+        assertEquals("a raincoat", vm.state.value.currentCard!!.english)
+        vm.reveal(); vm.markCurrent(true); vm.setQuery("")
+        assertEquals("raincoat", vm.state.value.query)
+        runCurrent(); assertEquals(VocabularyPage.CardsDone, vm.state.value.page)
+        vm.openHome(); vm.setQuery("")
+        assertEquals(300, vm.state.value.eligible.size)
+        assertEquals(1, vm.state.value.knownCount)
+    }
+    @Test fun consecutiveSkippedBatchesRotateFairlyWithinTheSameTopic() = runTest(dispatcher) {
+        val repo = FakeWords(); val vm = VocabularyViewModel(repo); runCurrent()
+        vm.selectTopic("family"); vm.startCards()
+        val first = vm.state.value.sessionCards.map { it.id }.toSet()
+        repeat(10) { vm.nextCard() }
+        vm.startCards()
+        val second = vm.state.value.sessionCards.map { it.id }.toSet()
+        assertEquals(10, first.size); assertEquals(10, second.size)
+        assertTrue("Skipped batch must not hide the other ten words", first.intersect(second).isEmpty())
+        repeat(10) { vm.nextCard() }
+        vm.startCards()
+        assertEquals(first, vm.state.value.sessionCards.map { it.id }.toSet())
+        assertEquals(VocabularyProgress(), repo.saved.value)
+    }
+    @Test fun repeatedHomeReadsReuseTheSameFilteredResult() {
+        val state = VocabularyState(query = "dien thoai")
+        assertSame("UI counters must reuse the filtered catalog", state.eligible, state.eligible)
+        assertEquals(state.eligible.size, state.knownCount + state.reviewCount + state.unseenCount)
+    }
 }
 
 class FakeWords(initial: VocabularyProgress = VocabularyProgress()) : VocabularyRepository {

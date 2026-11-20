@@ -24,6 +24,9 @@ import vn.noi.english.data.VocabularyRepository
 class LearningFlowTest {
     @get:Rule val compose = createComposeRule()
     private lateinit var vocabulary: VocabularyViewModel
+    private val voiceStatus = MutableStateFlow(VoiceState.Unavailable)
+    private var spokenText: String? = null
+    private var audioStops = 0
     private fun launch(fontScale: Float = 1f, initial: Progress = Progress(), conversationReadFails: Boolean = false, vocabularyReadFails: Boolean = false,
                        wordWriteGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null, wordWriteFails: Boolean = false): LearningViewModel {
         val repo = object : ProgressRepository {
@@ -58,9 +61,11 @@ class LearningFlowTest {
             override fun close() {}
         }
         val output = object : SpeechOutput {
-            override val status = MutableStateFlow(VoiceState.Unavailable)
-            override fun speak(text: String, onError: (String) -> Unit) { onError("Chưa có giọng đọc") }
-            override fun stop() {}
+            override val status = voiceStatus
+            override fun speak(text: String, onError: (String) -> Unit) {
+                if (status.value == VoiceState.Ready) spokenText = text else onError("Chưa có giọng đọc")
+            }
+            override fun stop() { audioStops++ }
             override fun close() {}
         }
         compose.setContent {
@@ -148,13 +153,13 @@ class LearningFlowTest {
         compose.onNodeWithText("Cần ôn").performScrollTo().performClick()
         compose.waitUntil(5_000) { vocabulary.state.value.progress.review.size == 1 }
         compose.onNodeWithContentDescription("Quay lại").performScrollTo().performClick()
-        compose.onNodeWithTag("known-word-count").assertTextEquals("1 / 135 đã nhớ")
+        compose.onNodeWithTag("known-word-count").assertTextEquals("1 / 300 đã nhớ")
         compose.onNodeWithText("Ôn từ cần nhớ").performScrollTo().performClick()
         compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
         compose.onNodeWithText("Đã nhớ").performScrollTo().performClick()
         compose.waitUntil(5_000) { vocabulary.state.value.page == VocabularyPage.CardsDone }
         compose.onNodeWithText("Về từ vựng").performScrollTo().performClick()
-        compose.onNodeWithTag("known-word-count").assertTextEquals("2 / 135 đã nhớ")
+        compose.onNodeWithTag("known-word-count").assertTextEquals("2 / 300 đã nhớ")
         compose.onNodeWithText("Học mỗi ngày").performClick()
         compose.onNodeWithText("Tiến độ").performClick()
         compose.onNodeWithText("1 / 45 bài").assertExists()
@@ -224,5 +229,63 @@ class LearningFlowTest {
         compose.waitUntil(5_000) { !vocabulary.state.value.saving && vocabulary.state.value.error != null }
         compose.onNodeWithText("Chưa lưu được mức nhớ.", substring = true).assertExists()
         compose.runOnIdle { org.junit.Assert.assertEquals(0, vocabulary.state.value.cardIndex) }
+    }
+    @Test fun searchNewVocabularyRevealHearExampleAndRestoreMark() {
+        launch()
+        compose.runOnIdle { voiceStatus.value = VoiceState.Ready }
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithTag("vocabulary-search").performTextInput("AO MUA")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithTag("known-word-count").assertTextEquals("0 / 1 đã nhớ")
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("a raincoat").assertExists()
+        compose.onNodeWithText("I need a raincoat.").assertDoesNotExist()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("I need a raincoat.").assertExists()
+        compose.onNodeWithText("Tôi cần một chiếc áo mưa.").assertExists()
+        compose.onNodeWithText("Nghe ví dụ").performScrollTo().performClick()
+        compose.runOnIdle { org.junit.Assert.assertEquals("I need a raincoat.", spokenText) }
+        val stopsBefore = audioStops
+        compose.onNodeWithText("Đã nhớ").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vocabulary.state.value.page == VocabularyPage.CardsDone }
+        compose.runOnIdle { org.junit.Assert.assertTrue(audioStops > stopsBefore) }
+        compose.onNodeWithText("Về từ vựng").performScrollTo().performClick()
+        compose.onNodeWithTag("known-word-count").assertTextEquals("1 / 1 đã nhớ")
+        compose.onNodeWithText("Xóa tìm kiếm").performScrollTo().performClick()
+        compose.onNodeWithTag("known-word-count").assertTextEquals("1 / 300 đã nhớ")
+    }
+    @Test fun largeTextSearchNoResultsCanBeClearedAndSessionIsShort() {
+        launch(fontScale = 2f)
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithTag("vocabulary-search").performTextInput("zzznothing")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Không tìm thấy từ phù hợp.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Xóa tìm kiếm").performScrollTo().performClick()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Thẻ 1 / 10").assertExists()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("Đã nhớ").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun nextConversationTurnStartsAtQuestionAfterScrollingWithLargeText() {
+        launch(fontScale = 2f)
+        compose.onNodeWithText("Bắt đầu học").performScrollTo().performClick()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Chọn câu").performScrollTo().performClick()
+        compose.onNode(hasText("Good morning!") and hasClickAction()).performScrollTo().performClick()
+        compose.onNodeWithText("Lượt tiếp theo").performScrollTo().performClick()
+        compose.onNodeWithText("Lượt 2 / 4").assertIsDisplayed()
+        compose.onNodeWithText("How are you this morning?").assertIsDisplayed()
+    }
+    @Test fun successfulAudioRetryClearsPreviousError() {
+        launch()
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Nghe từ").performScrollTo().performClick()
+        compose.onNodeWithText("Chưa có giọng đọc").assertExists()
+        compose.runOnIdle { voiceStatus.value = VoiceState.Ready }
+        compose.onNodeWithText("Nghe từ").performScrollTo().performClick()
+        compose.onNodeWithText("Chưa có giọng đọc").assertDoesNotExist()
+        compose.runOnIdle { org.junit.Assert.assertEquals("Good morning", spokenText) }
     }
 }

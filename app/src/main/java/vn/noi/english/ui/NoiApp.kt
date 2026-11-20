@@ -37,7 +37,7 @@ import vn.noi.english.vocabulary.VocabularyPage
         if (viewModel.state.value.saving || vocabularyViewModel.state.value.saving) return
         stopAudio(); action()
     }
-    fun speak(text: String) { speechInput.cancel(); viewModel.setAudio(AudioPhase.Idle); speechOutput.speak(text) { speechMessage = it } }
+    fun speak(text: String) { speechMessage = null; speechInput.cancel(); viewModel.setAudio(AudioPhase.Idle); speechOutput.speak(text) { speechMessage = it } }
     DisposableEffect(state.screen, state.lessonId, state.turnIndex, state.mode, words.page, words.currentCard?.id, words.currentQuestion?.card?.id) {
         onDispose { stopAudio(); speechMessage = null }
     }
@@ -72,10 +72,10 @@ import vn.noi.english.vocabulary.VocabularyPage
                         Screen.VocabularyMode -> VocabularyModeScreen(words, vocabularyViewModel, ::speak)
                         Screen.Lessons -> LessonsScreen(state, viewModel::home, viewModel::openLesson)
                         Screen.Vocabulary -> VocabularyScreen(state, viewModel::back, ::speak, viewModel::startConversation)
-                        Screen.Conversation -> ConversationScreen(state, { stopAudio(); viewModel.back() }, ::speak,
+                        Screen.Conversation -> key(state.lessonId, state.turnIndex) { ConversationScreen(state, { stopAudio(); viewModel.back() }, ::speak,
                             { stopAudio(); viewModel.setMode(it) }, viewModel::setAnswer, viewModel::submit,
                             { if (!state.saving) { speechOutput.stop(); requestMicrophone() } }, speechInput::stop,
-                            { stopAudio(); viewModel.retry() }, { stopAudio(); viewModel.nextTurn() })
+                            { stopAudio(); viewModel.retry() }, { stopAudio(); viewModel.nextTurn() }) }
                         Screen.Completion -> CompletionScreen(state, { viewModel.openTopic(state.topicId) }, { state.lessonId?.let(viewModel::openLesson) })
                     }
                 }

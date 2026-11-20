@@ -16,6 +16,8 @@ class VocabularyViewModel(private val repository: VocabularyRepository, private 
     private val mutable = MutableStateFlow(VocabularyState())
     val state = mutable.asStateFlow()
     private var progressJob: Job? = null
+    private val lastBatch = mutableMapOf<String, Long>()
+    private var batchSequence = 0L
     init { reload() }
     fun reload() {
         if (state.value.saving) return
@@ -40,6 +42,10 @@ class VocabularyViewModel(private val repository: VocabularyRepository, private 
         if (topicId != null && Curriculum.topics.none { it.id == topicId }) return
         mutable.update { it.copy(topicId = topicId, error = null) }
     }
+    fun setQuery(query: String) {
+        if (!state.value.saving && state.value.ready && state.value.page == VocabularyPage.Home)
+            mutable.update { it.copy(query = query, error = null) }
+    }
     private fun priority(card: WordCard): Int = when(card.id) {
         in state.value.progress.review -> 0
         in state.value.progress.known -> 2
@@ -48,8 +54,10 @@ class VocabularyViewModel(private val repository: VocabularyRepository, private 
     fun startCards(reviewOnly: Boolean = false) {
         val s = state.value
         if (!s.ready || s.saving) return
-        val cards = s.eligible.filter { !reviewOnly || it.id in s.progress.review }.sortedBy(::priority)
-        if (cards.isEmpty()) { mutable.update { it.copy(error = "Chưa có từ cần ôn trong chủ đề này. Bạn có thể học thẻ từ trước nhé.") }; return }
+        val cards = s.eligible.filter { !reviewOnly || it.id in s.progress.review }
+            .sortedWith(compareBy<WordCard> { priority(it) }.thenBy { lastBatch[it.id] ?: 0L }).take(10)
+        if (cards.isEmpty()) { mutable.update { it.copy(error = if (reviewOnly) "Chưa có từ cần ôn trong kết quả đang chọn. Bạn có thể học thẻ từ trước nhé." else "Không tìm thấy từ phù hợp. Hãy đổi từ khóa hoặc chủ đề.") }; return }
+        cards.forEach { lastBatch[it.id] = ++batchSequence }
         mutable.update { it.copy(page = VocabularyPage.Cards, sessionCards = cards, cardIndex = 0, revealed = false, error = null) }
     }
     fun reveal() {

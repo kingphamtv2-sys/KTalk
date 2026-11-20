@@ -93,5 +93,9 @@ class MainActivity : ComponentActivity() {
         input.cancel(); output.stop(); vm.setAudio(AudioPhase.Idle)
         super.onStop()
     }
+    override fun onResume() {
+        super.onResume()
+        output.refresh()
+    }
     override fun onDestroy() { input.close(); output.close(); super.onDestroy() }
 }

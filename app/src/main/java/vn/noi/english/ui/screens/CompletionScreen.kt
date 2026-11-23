@@ -11,11 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import vn.noi.english.learning.LearningState
+import vn.noi.english.content.LessonGuides
 import vn.noi.english.ui.components.*
 import vn.noi.english.ui.theme.*
 
 @Composable fun CompletionScreen(state: LearningState, onLessons: () -> Unit, onReplay: () -> Unit) {
     val lesson = state.lesson ?: return
+    val guide = LessonGuides[lesson.id]
     Page {
         BackHeader("Đã lưu tiến độ", onLessons)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -27,7 +29,14 @@ import vn.noi.english.ui.theme.*
         }
         Panel {
             Text("4 / 4 lượt hội thoại", style = MaterialTheme.typography.titleMedium)
-            Muted("3 cụm từ đã luyện · Không chấm điểm phát âm")
+            Eyebrow("Bạn vừa luyện")
+            Text(guide.objective)
+            Muted("Đã hoàn thành tình huống mẫu · Chưa đánh giá mức độ thành thạo hay phát âm")
+        }
+        Panel(BlueTint, false) {
+            Eyebrow("Mẹo dùng ngoài đời")
+            Text(guide.tip)
+            Muted("Thử nói lại một lần và bớt nhìn gợi ý. Khi quen, thay thông tin bằng điều phù hợp với bạn.")
         }
         Spacer(Modifier.height(8.dp))
         Text("Mang theo vào cuộc sống", style = MaterialTheme.typography.titleMedium)

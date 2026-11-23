@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,9 +32,11 @@ class LearningFlowTest {
     private val voiceStatus = MutableStateFlow(VoiceState.Unavailable)
     private var spokenText: String? = null
     private var audioStops = 0
+    private lateinit var rootView: android.view.View
     private fun launch(fontScale: Float = 1f, initial: Progress = Progress(), conversationReadFails: Boolean = false, vocabularyReadFails: Boolean = false,
                        wordWriteGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null, wordWriteFails: Boolean = false,
-                       systemSpeech: (() -> Unit)? = null, speechSettings: (() -> Unit)? = null, compact: Boolean = false): LearningViewModel {
+                       systemSpeech: (() -> Unit)? = null, speechSettings: (() -> Unit)? = null, compact: Boolean = false,
+                       viewport: DpSize = DpSize(360.dp, 680.dp), voiceError: String = "Chưa có giọng đọc"): LearningViewModel {
         val repo = object : ProgressRepository {
             val saved = MutableStateFlow(initial)
             override val progress = kotlinx.coroutines.flow.flow {
@@ -68,16 +71,17 @@ class LearningFlowTest {
         val output = object : SpeechOutput {
             override val status = voiceStatus
             override fun speak(text: String, onError: (String) -> Unit) {
-                if (status.value == VoiceState.Ready) spokenText = text else onError("Chưa có giọng đọc")
+                if (status.value == VoiceState.Ready) spokenText = text else onError(voiceError)
             }
             override fun stop() { audioStops++ }
             override fun close() {}
         }
         compose.setContent {
+            rootView = androidx.compose.ui.platform.LocalView.current
             val currentDensity = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(currentDensity.density, fontScale)) {
                 NoiTheme {
-                    Box(if (compact) Modifier.requiredSize(360.dp, 680.dp) else Modifier) {
+                    Box(if (compact) Modifier.requiredSize(viewport.width, viewport.height) else Modifier) {
                         NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}, vocabulary,
                             onSystemSpeech = systemSpeech, openSpeechSettings = speechSettings)
                     }
@@ -352,6 +356,136 @@ class LearningFlowTest {
         compose.onNodeWithText("Về từ vựng").performScrollTo().performClick()
         compose.onNodeWithTag("known-word-count").performScrollTo().assertTextEquals("0 / 1 đã nhớ")
         compose.runOnIdle { org.junit.Assert.assertEquals(1, vocabulary.state.value.progress.review.size) }
+    }
+    @Test fun lessonBriefShowsItsPurposeBeforeStartingPractice() {
+        launch(compact = true)
+        compose.onNodeWithText("Bắt đầu học").performScrollTo().performClick()
+        compose.onAllNodesWithText("Chào buổi sáng").onFirst().assertIsDisplayed()
+        compose.onNodeWithText("Chào buổi sáng, trả lời câu hỏi thăm và đáp lại lời chúc.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Bạn là: Người bạn").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithContentDescription("Bắt đầu nói").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun hotelPracticeIdentifiesTheReceptionistInsteadOfAFriend() {
+        val vm = launch(compact = true, fontScale = 2f)
+        compose.runOnIdle { vm.openLesson("hotel-check-in") }
+        compose.onNodeWithText("Bạn là: Khách lưu trú").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Lễ tân").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Alex", substring = false).assertDoesNotExist()
+        compose.onNodeWithText("Chọn câu").performScrollTo().performClick()
+        compose.onNode(hasText("I'd like to check in, please.") and hasClickAction()).performScrollTo().performClick()
+        compose.onNodeWithText("Lượt tiếp theo").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun completionConnectsTheDialogueToAPracticalTakeaway() {
+        val vm = launch(compact = true)
+        compose.runOnIdle { vm.openLesson("greetings-morning") }
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        listOf("Good morning!", "I'm fine, thank you.", "Yes, I am.", "You too!").forEachIndexed { index, answer ->
+            compose.onNodeWithText("Chọn câu").performScrollTo().performClick()
+            compose.onNode(hasText(answer) and hasClickAction()).performScrollTo().performClick()
+            compose.onNodeWithText(if (index == 3) "Hoàn thành bài" else "Lượt tiếp theo").performScrollTo().performClick()
+        }
+        compose.onNodeWithText("Chào buổi sáng, trả lời câu hỏi thăm và đáp lại lời chúc.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Đáp lại lời chúc bằng You too!; thêm Thank you để thể hiện sự lịch sự.").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { org.junit.Assert.assertEquals(setOf("greetings-morning"), vm.state.value.progress.completedLessonIds) }
+    }
+    @Test fun typedAnswerCanBeCheckedFromTheKeyboardWithoutAddingANewline() {
+        val vm = launch(compact = true, fontScale = 1.3f)
+        compose.runOnIdle { voiceStatus.value = VoiceState.Ready; vm.openLesson("greetings-morning") }
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Gõ", substring = false).performScrollTo().performClick()
+        compose.onNodeWithTag("answer-input").performTextInput("Good morning!")
+        compose.onNodeWithTag("answer-input").performImeAction()
+        compose.runOnIdle {
+            org.junit.Assert.assertEquals(Feedback.Accepted, vm.state.value.feedback)
+            org.junit.Assert.assertEquals("Good morning!", vm.state.value.answer)
+            org.junit.Assert.assertEquals(0, vm.state.value.turnIndex)
+        }
+        compose.onNodeWithText("✓ Câu trả lời phù hợp!").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun correctedSpeechCanBeCheckedFromTheKeyboard() {
+        val vm = launch(compact = true)
+        compose.runOnIdle { voiceStatus.value = VoiceState.Ready; vm.openLesson("greetings-morning") }
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.runOnIdle { vm.setAnswer("Good mourning") }
+        compose.onNodeWithTag("answer-input").performScrollTo().performTextReplacement("Good morning!")
+        compose.onNodeWithTag("answer-input").performImeAction()
+        compose.runOnIdle {
+            org.junit.Assert.assertEquals(Feedback.Accepted, vm.state.value.feedback)
+            org.junit.Assert.assertEquals(AnswerMode.Speak, vm.state.value.mode)
+        }
+    }
+    @Test fun zoomedDisplayWithLargeTextStillAllowsFallbackWhileAnAudioErrorIsShown() {
+        val vm = launch(compact = true, viewport = DpSize(320.dp, 658.dp), fontScale = 2f)
+        compose.runOnIdle { vm.openLesson("greetings-morning") }
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.runOnIdle { vm.message("Ứng dụng nhận diện Android chưa mở được phiên nghe (SYS-CLIENT). Kiểm tra hoặc cập nhật dịch vụ nhận diện trong Cài đặt.") }
+        compose.onNodeWithText("Gõ", substring = false).performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithTag("answer-input").performScrollTo().performTextInput("Good morning!")
+        compose.onNodeWithTag("answer-input").performImeAction()
+        compose.runOnIdle { org.junit.Assert.assertEquals(Feedback.Accepted, vm.state.value.feedback) }
+    }
+    @Test fun speechTranscriptCanBeErasedCompletelyAndRetypedBeforeChecking() {
+        val vm = launch(compact = true)
+        compose.runOnIdle { voiceStatus.value = VoiceState.Ready; vm.openLesson("greetings-morning") }
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.runOnIdle { vm.setAnswer("Good mourning") }
+        compose.onNodeWithTag("answer-input").performScrollTo().performClick().performTextClearance()
+        compose.onNodeWithTag("answer-input").assertExists().assertIsFocused().performTextInput("Good morning!")
+        compose.onNodeWithTag("answer-input").performImeAction()
+        compose.runOnIdle { org.junit.Assert.assertEquals(Feedback.Accepted, vm.state.value.feedback) }
+        compose.onNodeWithText("Thử nói lại").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Bắt đầu nói").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("answer-input").assertDoesNotExist()
+    }
+    @Test fun directCheckoutLessonExplainsTheRoomNumberBeforeExpectingIt() {
+        val vm = launch(compact = true)
+        compose.runOnIdle { vm.openLesson("hotel-check-out") }
+        compose.onNodeWithText("Bạn vừa lưu trú ở phòng 205. Bạn trả phòng, lấy biên lai, thanh toán bằng thẻ và gửi hành lý một lát.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Chọn câu").performScrollTo().performClick()
+        compose.onNode(hasText("Yes, I'd like to check out.") and hasClickAction()).performScrollTo().performClick()
+        compose.onNodeWithText("Lượt tiếp theo").performScrollTo().performClick()
+        compose.onNodeWithText("Ví dụ: Room two-oh-five.").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun meetingLessonStatesTheFixedTimeBeforeAskingTheLearnerToProposeIt() {
+        val vm = launch(compact = true)
+        compose.runOnIdle { vm.openLesson("time-meeting") }
+        compose.onNodeWithText("Bạn muốn hẹn Alex ở quán cà phê lúc ba giờ chiều ngày mai. Hãy nhận lời và đề xuất giờ gặp đó.").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun zoomedLargeTextNavigationKeepsItsLabelsInsideTheScreen() {
+        launch(compact = true, viewport = DpSize(320.dp, 658.dp), fontScale = 2f)
+        val homeLabel = hasText("Học mỗi ngày", substring = false) or hasText("Học", substring = false)
+        val screen = compose.onNodeWithTag("screen-content").getBoundsInRoot()
+        listOf(homeLabel, hasText("Từ vựng", substring = false), hasText("Tiến độ", substring = false)).forEach { matcher ->
+            val bounds = compose.onNode(matcher, useUnmergedTree = true).getUnclippedBoundsInRoot()
+            org.junit.Assert.assertTrue("Navigation label $bounds must fit width $screen", bounds.left >= screen.left && bounds.right <= screen.right)
+        }
+        compose.onNodeWithText("Tiến độ").performClick()
+        compose.onNode(homeLabel).performClick()
+        compose.onNodeWithText("Bắt đầu học").assertExists()
+    }
+    @Test fun persistentVoiceErrorAndKeyboardLeaveRoomToEditOnAZoomedDisplay() {
+        val error = "Thiết bị chưa có giọng đọc tiếng Anh. Bạn có thể cài giọng đọc trong phần Cài đặt."
+        val vm = launch(compact = true, viewport = DpSize(320.dp, 658.dp), fontScale = 2f, voiceError = error)
+        compose.runOnIdle { vm.openLesson("greetings-morning") }
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Gõ", substring = false).performScrollTo().performClick()
+        compose.onNodeWithText("Nghe câu mẫu").performScrollTo().performClick()
+        compose.onNodeWithText(error).assertExists()
+        compose.onNodeWithTag("answer-input").performScrollTo().performClick().performTextInput("Good morning!")
+        if (!android.os.Build.FINGERPRINT.contains("robolectric")) {
+            compose.waitUntil(5_000) {
+                androidx.core.view.ViewCompat.getRootWindowInsets(rootView)?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+            }
+        }
+        val input = compose.onNodeWithTag("answer-input").getUnclippedBoundsInRoot()
+        val viewport = compose.onNodeWithTag("screen-content").getBoundsInRoot()
+        org.junit.Assert.assertTrue("Editable answer $input must fit in $viewport with voice error and IME", input.top >= viewport.top && input.bottom <= viewport.bottom)
+        compose.onNodeWithText(error).assertExists()
+        compose.onNodeWithTag("answer-input").performImeAction()
+        compose.runOnIdle { org.junit.Assert.assertEquals(Feedback.Accepted, vm.state.value.feedback) }
     }
     @Test fun homeSuggestionDoesNotPromoteACompletedReplayAsANewLesson() {
         val vm = launch(initial = Progress(setOf("greetings-morning"), "greetings-morning", 2))

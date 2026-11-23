@@ -6,6 +6,19 @@ import vn.noi.english.content.Curriculum
 import vn.noi.english.content.Turn
 
 class AnswerMatcherTest {
+    @Test fun commonVietnameseNameAnWorksInEveryPersonalNameSlot() {
+        listOf(
+            Triple("introductions-name", 0, "My name is An."),
+            Triple("greetings-meeting", 0, "Hello! I'm Minh An."),
+            Triple("family-photo", 1, "Her name is An."),
+            Triple("phone-call", 0, "Hello, this is An."),
+        ).forEach { (id, index, answer) ->
+            assertTrue("$id: $answer", AnswerMatcher.matches(answer, Curriculum.lesson(id)!!.turns[index]))
+        }
+        val turn = Curriculum.lesson("introductions-name")!!.turns[0]
+        assertFalse(AnswerMatcher.matches("My name is a student.", turn))
+        assertFalse(AnswerMatcher.matches("My name is not An.", turn))
+    }
     @Test fun fullFormsMatchRealLessonContractionsWithoutDroppingNegation() {
         val song = Curriculum.lessons.flatMap { it.turns }.single { it.sample == "Sure, I'll send you a song." }
         assertTrue(AnswerMatcher.matches("Sure, I will send you a song.", song))

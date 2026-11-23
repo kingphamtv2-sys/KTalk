@@ -5,6 +5,61 @@ import org.junit.Test
 import vn.noi.english.learning.AnswerMatcher
 
 class CurriculumTest {
+    @Test fun learnerMayClarifyThatThePersonalNameTheyGaveWasTheirFullName() {
+        val lesson = Curriculum.lesson("introductions-name")!!
+        assertTrue(AnswerMatcher.matches("My name is Nguyễn Minh Anh.", lesson.turns[0]))
+        assertTrue(AnswerMatcher.matches("No, that's my full name.", lesson.turns[2]))
+        assertTrue(AnswerMatcher.matches("Yes, it is.", lesson.turns[2]))
+    }
+    @Test fun aValidAlternateOrderIsNotReplacedByTheSampleOnTheNextTurn() {
+        val drinks = Curriculum.lesson("food-drink")!!
+        assertTrue(AnswerMatcher.matches("A tea, please.", drinks.turns[0]))
+        assertFalse("Tea order is called coffee", "coffee" in drinks.turns[2].prompt.lowercase())
+        assertFalse("Tea order mistranslated", "cà phê" in drinks.turns[2].translation.lowercase())
+        val sizes = Curriculum.lesson("shopping-size")!!
+        assertTrue(AnswerMatcher.matches("Small, please.", sizes.turns[0]))
+        assertTrue(AnswerMatcher.matches("Large, please.", sizes.turns[0]))
+        assertFalse("Accepted sizes are replaced by medium", "medium" in sizes.turns[1].prompt.lowercase())
+    }
+    @Test fun plausibleRepliesAreNotOfferedAsIncorrectChoices() {
+        listOf(
+            Triple("directions-place", 2, "How much is a train ticket?"),
+            Triple("directions-confirm", 2, "How much is a museum ticket?"),
+            Triple("family-siblings", 2, "She reads at the library."),
+            Triple("help-repeat", 0, "It's on the second floor, right?"),
+            Triple("help-repeat", 1, "The first floor, right?"),
+            Triple("help-repeat", 2, "The fourth floor, right?"),
+        ).forEach { (id, index, answer) ->
+            val turn = Curriculum.lesson(id)!!.turns[index]
+            assertFalse("Reasonable reply offered as wrong: $id / $answer", answer in turn.choices && !AnswerMatcher.matches(answer, turn))
+        }
+    }
+    @Test fun findingTheBagDoesNotReplaceTheAcceptedDescriptionWithOneBook() {
+        val lesson = Curriculum.lesson("help-lost-bag")!!
+        assertTrue(AnswerMatcher.matches("There are two books inside.", lesson.turns[2]))
+        assertFalse("Two books were changed to a book", "with a book" in lesson.turns[3].prompt.lowercase())
+    }
+    @Test fun everyLessonHasAUsefulBriefAndAnAccuratePartner() {
+        Curriculum.lessons.forEach { lesson ->
+            val guide = LessonGuides[lesson.id]
+            assertTrue(lesson.id, listOf(guide.objective, guide.tip, guide.learnerRole, guide.partnerRole).all { it.isNotBlank() })
+            assertTrue("Speaker count: ${lesson.id}", guide.turnSpeakers.isEmpty() || guide.turnSpeakers.size == 4)
+        }
+        assertEquals("Lễ tân", LessonGuides["hotel-check-in"].speakerAt(0))
+        assertEquals("Tài xế", LessonGuides["transport-taxi"].speakerAt(2))
+        assertEquals(listOf("Người nghe máy", "Người nghe máy", "Alex", "Alex"), (0..3).map { LessonGuides["phone-call"].speakerAt(it) })
+    }
+    @Test fun personalNameIntroductionDoesNotForceTheSampleNameOnTheNextTurn() {
+        val lesson = Curriculum.lesson("introductions-name")!!
+        assertTrue(AnswerMatcher.matches("My name is Nam.", lesson.turns.first()))
+        assertTrue(lesson.turns.drop(1).none { "Linh" in it.prompt || "Linh" in it.translation })
+    }
+    @Test fun originalLessonsDoNotRevealAnswersThroughAFixedAlternatingPosition() {
+        val orders = Curriculum.lessons.take(15).map { lesson ->
+            lesson.turns.map { turn -> turn.choices.indexOfFirst { AnswerMatcher.matches(it, turn) } }
+        }
+        assertTrue("All original lessons use the same answer positions", orders.toSet().size > 2)
+    }
     @Test fun fortyFiveDistinctLessonsArePlayable() {
         assertEquals(15, Curriculum.topics.size)
         val lessons = Curriculum.topics.flatMap { it.lessons }

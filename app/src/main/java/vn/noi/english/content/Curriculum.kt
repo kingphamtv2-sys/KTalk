@@ -1,5 +1,7 @@
 package vn.noi.english.content
 
+import kotlin.random.Random
+
 object Curriculum {
     private data class Draft(
         val prompt: String, val translation: String, val sample: String, val hint: String,
@@ -13,7 +15,7 @@ object Curriculum {
         val id = "$topic-$slug"
         return Lesson(id, topic, title, situation, vocabulary, turns.mapIndexed { i, d ->
             Turn("$id-${i + 1}", d.prompt, d.translation, d.hint, d.sample, d.explanation,
-                if (i % 2 == 0) listOf(d.sample, Distractors.forTurn(id, i)) else listOf(Distractors.forTurn(id, i), d.sample),
+                listOf(d.sample, Distractors.forTurn(id, i)).shuffled(Random("$id-${i + 1}".hashCode())),
                 listOf(d.sample) + d.alternatives, d.slots, d.slotKind)
         })
     }
@@ -42,8 +44,8 @@ object Curriculum {
             lesson("introductions", "name", "Tên của bạn", "Bạn giới thiệu tên với Alex và hỏi lại tên bạn ấy.",
                 words("My name is…" to "Tên tôi là…", "What's your name?" to "Bạn tên gì?", "spell" to "Đánh vần"),
                 t("What's your name?", "Bạn tên gì?", "My name is Linh.", "My name is + tên của bạn.", "Bạn cũng có thể giới thiệu bằng I'm + tên.", slots=listOf("(?:my name is|i am) $name")),
-                t("Could you ask me my name too?", "Bạn có thể hỏi lại tên tôi không?", "What's your name?", "Hỏi: What's your name?", "What's là dạng viết tắt của what is.", listOf("What is your name?")),
-                t("I'm Alex. Is Linh your first name?", "Tôi là Alex. Linh là tên của bạn đúng không?", "Yes, it is.", "Yes + it is.", "Dùng it để nhắc lại tên đang nói đến.", listOf("Yes, Linh is my first name.")),
+                t("Sorry, I haven't told you my name yet.", "Xin lỗi, tôi vẫn chưa cho bạn biết tên mình.", "What's your name?", "Hỏi tên người đối diện: What's your name?", "What's là dạng viết tắt của what is.", listOf("What is your name?")),
+                t("I'm Alex. Is that your first name?", "Tôi là Alex. Đó là tên riêng của bạn đúng không?", "Yes, it is.", "Yes + it is.", "First name là tên riêng; full name là họ tên đầy đủ. Nếu vừa nói cả họ tên, bạn có thể đáp No, that's my full name.", listOf("Yes, that's my first name.", "No, that's my full name.", "No, it's my full name.", "That's my full name.")),
                 t("Thanks for introducing yourself!", "Cảm ơn bạn đã giới thiệu bản thân!", "You're welcome.", "Đáp lại lời cảm ơn: You're welcome.", "You're welcome là cách đáp lịch sự sau lời cảm ơn.", listOf("You are welcome.", "No problem."))),
             lesson("introductions", "country", "Bạn đến từ đâu?", "Bạn nói về quê hương Việt Nam với Alex.",
                 words("I'm from…" to "Tôi đến từ…", "Vietnam" to "Việt Nam", "live in" to "Sống ở"),
@@ -63,7 +65,7 @@ object Curriculum {
                 words("a coffee" to "Một cốc cà phê", "please" to "Làm ơn / vui lòng", "no sugar" to "Không đường"),
                 t("What would you like to drink?", "Bạn muốn uống gì?", "A coffee, please.", "A + đồ uống + please.", "Thêm please để gọi đồ một cách lịch sự.", listOf("I'd like a coffee, please.", "A tea, please.")),
                 t("Would you like it hot or iced?", "Bạn muốn đồ nóng hay có đá?", "Iced, please.", "Chọn: Iced, please / Hot, please.", "Iced là có đá; hot là nóng.", listOf("Hot, please.")),
-                t("Would you like sugar in your coffee?", "Bạn có muốn thêm đường vào cà phê không?", "No sugar, please.", "No sugar + please.", "No sugar có nghĩa là không đường.", listOf("No, thank you.", "Yes, please.")),
+                t("Would you like sugar in your drink?", "Bạn có muốn thêm đường vào đồ uống không?", "No sugar, please.", "No sugar + please.", "No sugar có nghĩa là không đường.", listOf("No, thank you.", "Yes, please.")),
                 t("Is that all for your drinks order?", "Đồ uống của bạn chỉ có vậy thôi phải không?", "That's all, thank you.", "That's all + thank you.", "That's all báo rằng bạn đã gọi xong.", listOf("Yes, that's all.", "That is all, thank you."))),
             lesson("food", "meal", "Chọn món ăn", "Bạn chọn bữa trưa tại một nhà hàng nhỏ.",
                 words("the menu" to "Thực đơn", "chicken rice" to "Cơm gà", "not spicy" to "Không cay"),
@@ -88,7 +90,7 @@ object Curriculum {
             lesson("shopping", "size", "Chọn kích cỡ", "Bạn tìm một chiếc áo vừa cỡ và thử áo.",
                 words("medium" to "Cỡ vừa", "try on" to "Thử đồ", "fits well" to "Vừa vặn"),
                 t("What size do you need?", "Bạn cần cỡ nào?", "Medium, please.", "Cỡ áo + please.", "Small, medium, large lần lượt là nhỏ, vừa, lớn.", listOf("Small, please.", "Large, please.")),
-                t("Here is a medium. Would you like to try it on?", "Đây là cỡ vừa. Bạn có muốn thử không?", "Yes, please.", "Yes + please.", "Try it on nghĩa là mặc thử món đồ."),
+                t("Here you are. Would you like to try it on?", "Áo của bạn đây. Bạn có muốn thử không?", "Yes, please.", "Yes + please.", "Try it on nghĩa là mặc thử món đồ."),
                 t("How does the T-shirt fit?", "Chiếc áo phông có vừa không?", "It fits well.", "It + fits well.", "It fits well có nghĩa là chiếc áo vừa vặn.", listOf("It's too small.", "It's too big.")),
                 t("Do you want a different size?", "Bạn có muốn đổi cỡ khác không?", "No, this is fine.", "No + this is fine.", "This is fine giúp xác nhận món hiện tại đã phù hợp.", listOf("Yes, a large, please.", "No, thank you."))),
             lesson("shopping", "buy", "Mua món đồ", "Bạn chọn một chiếc túi và thanh toán.",
@@ -108,14 +110,14 @@ object Curriculum {
             lesson("directions", "route", "Hỏi hướng đi", "Bạn hỏi cách đi bộ từ đây tới ngân hàng.",
                 words("go straight" to "Đi thẳng", "turn left" to "Rẽ trái", "on the right" to "Ở bên phải"),
                 t("Excuse me, are you looking for the bank?", "Xin lỗi, bạn đang tìm ngân hàng phải không?", "Yes, how do I get there?", "Yes + how do I get there?", "How do I get there hỏi cách đến một nơi.", listOf("Yes, where is the bank?")),
-                t("Go straight. Could you repeat the first step?", "Đi thẳng. Bạn có thể nhắc lại bước đầu không?", "Go straight.", "Nhắc lại: Go straight.", "Nhắc lại chỉ dẫn giúp bạn xác nhận đã nghe đúng."),
-                t("Then turn left. Which way should you turn?", "Sau đó rẽ trái. Bạn nên rẽ hướng nào?", "Turn left.", "Turn + left.", "Left là trái; right là phải.", listOf("I should turn left.")),
-                t("The bank is on the right. Where is it?", "Ngân hàng ở bên phải. Nó nằm ở đâu?", "On the right.", "On the + right.", "On the right nói vị trí ở bên phải.", listOf("It's on the right.", "The bank is on the right."))),
+                t("First, go straight along this street.", "Đầu tiên, đi thẳng theo con phố này.", "Go straight.", "Nhắc lại: Go straight.", "Nhắc lại chỉ dẫn giúp bạn xác nhận đã nghe đúng."),
+                t("Then turn left at the traffic lights.", "Sau đó rẽ trái ở chỗ đèn giao thông.", "Turn left.", "Nhắc lại hướng rẽ: Turn + left.", "Left là trái; right là phải.", listOf("I should turn left.")),
+                t("You'll see the bank on the right.", "Bạn sẽ thấy ngân hàng ở bên phải.", "On the right.", "Xác nhận vị trí: On the + right.", "On the right nói vị trí ở bên phải.", listOf("It's on the right.", "The bank is on the right."))),
             lesson("directions", "confirm", "Xác nhận đường đi", "Bạn xác nhận lại đường tới bảo tàng trước khi đi.",
                 words("Could you repeat that?" to "Bạn nhắc lại được không?", "next to" to "Bên cạnh", "Thank you for your help" to "Cảm ơn bạn đã giúp đỡ"),
-                t("The museum is next to the park. Did you hear me?", "Bảo tàng ở cạnh công viên. Bạn nghe rõ chứ?", "Could you repeat that, please?", "Could you repeat that + please?", "Dùng câu này khi bạn chưa nghe rõ lời chỉ dẫn.", listOf("Can you repeat that, please?")),
-                t("It's next to the park. Can you confirm the location?", "Nó ở bên cạnh công viên. Bạn xác nhận lại vị trí nhé?", "It's next to the park.", "It's + next to + the park.", "Next to có nghĩa là ở bên cạnh.", listOf("The museum is next to the park.")),
-                t("It takes five minutes. Would you like to check the time?", "Mất năm phút. Bạn có muốn hỏi lại thời gian không?", "Is it a five-minute walk?", "Is it + a five-minute walk?", "A five-minute walk nghĩa là đi bộ mất năm phút.", listOf("Does it take five minutes?")),
+                t("The museum is next to the park.", "Bảo tàng ở cạnh công viên.", "Could you repeat that, please?", "Bạn chưa nghe rõ. Dùng Could you repeat that + please?", "Dùng câu này khi bạn chưa nghe rõ lời chỉ dẫn.", listOf("Can you repeat that, please?")),
+                t("It's next to the park, just across this street.", "Nó ở bên cạnh công viên, ngay bên kia đường này.", "It's next to the park.", "Nhắc lại vị trí: It's + next to + the park.", "Next to có nghĩa là ở bên cạnh.", listOf("The museum is next to the park.")),
+                t("It only takes five minutes to get there.", "Đến đó chỉ mất năm phút.", "Is it a five-minute walk?", "Hỏi rõ có phải đi bộ không: Is it + a five-minute walk?", "A five-minute walk nghĩa là đi bộ mất năm phút.", listOf("Does it take five minutes?")),
                 t("Yes, five minutes on foot. You're all set!", "Đúng, đi bộ năm phút. Bạn biết đường rồi nhé!", "Thank you for your help!", "Thank you + for your help.", "Cảm ơn cụ thể sự giúp đỡ của người chỉ đường.", listOf("Thanks for your help.", "Thank you!")))
         ))
     ) + DailyLessons.topics

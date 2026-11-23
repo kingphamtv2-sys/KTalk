@@ -10,10 +10,13 @@ import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Style
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.activity.compose.BackHandler
@@ -56,18 +59,23 @@ import vn.noi.english.vocabulary.VocabularyPage
                 indicatorColor = BlueTint, unselectedIconColor = Subtle, unselectedTextColor = Subtle)
             if (state.screen == Screen.Home || state.screen == Screen.Progress || state.screen == Screen.VocabularyMode) NavigationBar(
                 modifier = Modifier.heightIn(min = if (LocalDensity.current.fontScale > 1.3f) 112.dp else 80.dp), containerColor = CardWhite, tonalElevation = 0.dp) {
-                NavigationBarItem(selected = state.screen == Screen.Home, colors = navColors, enabled = canNavigate, onClick = { navigate(viewModel::home) }, icon = { Icon(Icons.AutoMirrored.Outlined.MenuBook, null) }, label = { Text("Học mỗi ngày", style = MaterialTheme.typography.labelSmall, maxLines = 2) })
+                NavigationBarItem(selected = state.screen == Screen.Home, colors = navColors, enabled = canNavigate, onClick = { navigate(viewModel::home) }, icon = { Icon(Icons.AutoMirrored.Outlined.MenuBook, null) }, label = { Text(if (LocalDensity.current.fontScale > 1.3f) "Học" else "Học mỗi ngày", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2) })
                 NavigationBarItem(selected = state.screen == Screen.VocabularyMode, colors = navColors, enabled = canNavigate, onClick = { navigate { vocabularyViewModel.openHome(); viewModel.showVocabulary() } }, icon = { Icon(Icons.Outlined.Style, null) }, label = { Text("Từ vựng", style = MaterialTheme.typography.labelSmall, maxLines = 2) })
                 NavigationBarItem(selected = state.screen == Screen.Progress, colors = navColors, enabled = canNavigate, onClick = { navigate(viewModel::showProgress) }, icon = { Icon(Icons.Outlined.BarChart, null) }, label = { Text("Tiến độ", style = MaterialTheme.typography.labelSmall, maxLines = 2) })
             }
         }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+        BoxWithConstraints(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+        val maximumNoticeHeight = (maxHeight * 0.45f).coerceAtLeast(116.dp).coerceAtMost(maxHeight)
+        val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        Column(Modifier.fillMaxSize()) {
             val displayMessage = speechMessage ?: state.message.takeIf { state.ready || state.screen != Screen.VocabularyMode }
-            if (displayMessage != null) Surface(color = Warm, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (displayMessage != null) Surface(color = Warm, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).heightIn(max = maximumNoticeHeight)) {
+                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Outlined.Info, null, Modifier.padding(top = 2.dp).size(20.dp), tint = Ink)
                     Column(Modifier.weight(1f)) {
-                        Text(displayMessage, style = MaterialTheme.typography.bodyMedium, color = Ink)
+                        key(displayMessage) {
+                            Text(displayMessage, Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodyMedium, color = Ink)
+                        }
                         TextButton({ speechMessage = null; viewModel.message(null) }) { Text("Đã hiểu") }
                     }
                 }
@@ -93,12 +101,13 @@ import vn.noi.english.vocabulary.VocabularyPage
                 }
             }
             if (((state.ready && (state.screen == Screen.Vocabulary || state.screen == Screen.Conversation)) ||
-                    (state.screen == Screen.VocabularyMode && words.ready && words.page in listOf(VocabularyPage.Cards, VocabularyPage.Quiz))) && voice == VoiceState.Unavailable) {
+                    (state.screen == Screen.VocabularyMode && words.ready && words.page in listOf(VocabularyPage.Cards, VocabularyPage.Quiz))) && voice == VoiceState.Unavailable && !keyboardVisible) {
                 Surface(color = BlueTint) { Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("Chưa có giọng đọc tiếng Anh", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
                     TextButton(openVoiceSettings) { Text("Cài giọng") }
                 } }
             }
+        }
         }
     }
 }

@@ -1,8 +1,8 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
-Phiên bản **0.5.0 — giao diện mới**, giữ 45 bài và 300 mục từ vựng. Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem giao diện](docs/testing/screenshots/modern-home.png) · [Báo cáo nghiệm thu](docs/modern-ui-report.md).
+Phiên bản **0.6.0 — cải thiện bài học và thao tác**, giữ 45 bài và 300 mục từ vựng. Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem bài học](docs/testing/screenshots/s9-lesson-brief.png) · [Báo cáo nghiệm thu](docs/lesson-quality-report.md).
 
-APK bàn giao riêng tại `releases/KTalk-0.5.0-modern-ui.apk` trên máy triển khai; file APK không lưu trong Git. Khi clone source sang máy khác, dùng hướng dẫn Build bên dưới.
+APK bàn giao riêng tại `releases/KTalk-0.6.0-lesson-quality.apk` trên máy triển khai; file APK không lưu trong Git. Khi clone source sang máy khác, dùng hướng dẫn Build bên dưới.
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
@@ -11,7 +11,10 @@ APK bàn giao riêng tại `releases/KTalk-0.5.0-modern-ui.apk` trên máy tri�
 - 15 chủ đề hằng ngày, 45 bài riêng, mỗi bài 3 cụm từ và 4 lượt hội thoại: tổng 135 mục cụm từ và 180 lượt.
 - [Danh sách đầy đủ 45 bài](docs/content/45-lessons.md), gồm 30 bài mới dành cho người mới bắt đầu.
 - Giải thích tiếng Việt và gợi ý câu trả lời có thể ẩn.
+- Cả 45 bài có mục tiêu giao tiếp, vai và mẹo thực hành riêng; trước bài giải thích tình huống, sau bài nhắc lại điều đã luyện. [Xem bản biên tập đầy đủ 180 lượt](docs/content/45-lesson-quality.md).
+- Đáp án nhiễu là câu tiếng Anh có nghĩa nhưng không khớp lượt; lời thoại theo đúng vai. Nhận tên Việt như An, giải thích tên riêng/họ tên đầy đủ và nêu trước các dữ kiện cố định trong bài nhập vai.
 - Nói qua micro, xem/sửa kết quả nhận diện trước khi kiểm tra; luôn có chế độ chọn hoặc gõ.
+- Có thể xóa hết rồi gõ lại kết quả nhận diện. Phím hoàn tất trên bàn phím kiểm tra câu trả lời; thông báo dài cuộn được và chừa vùng nhập khi bàn phím mở.
 - Nghe câu hỏi, cụm từ và câu trả lời mẫu bằng giọng tiếng Anh trên thiết bị.
 - Tiến độ lưu bằng DataStore trên điện thoại, tiếp tục bài chưa học xong, học lại không đếm trùng.
 - Tab **Từ vựng** riêng: 300 thẻ từ/cụm từ trong 15 chủ đề, nghe tiếng Anh, lật nghĩa tiếng Việt và tự đánh dấu **Đã nhớ / Cần ôn**. Giữ 135 mục gốc, thêm [165 mục có câu ví dụ Anh–Việt](docs/content/165-vocabulary-expansion.md) và nghe ví dụ.
@@ -48,7 +51,7 @@ adb shell am start -n vn.noi.english/.MainActivity
 
 Đây là bản debug để thử nghiệm, chưa phải gói phát hành Play Store.
 
-Bản 0.5.0 dùng cùng package và chữ ký debug với bản cũ trên máy triển khai. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử 0.4.1 → 0.5.0 giữ cả tiến độ hội thoại và từ vựng sau khi mở lại. Build trên máy khác cần chuyển đúng khóa ký cũ nếu muốn cài đè APK hiện tại; chỉ pull source không bao gồm khóa. Chi tiết: [báo cáo giao diện](docs/modern-ui-report.md), [báo cáo phục hồi micro](docs/microphone-recovery-report.md).
+Bản 0.6.0 dùng cùng package và chữ ký debug với bản cũ trên máy triển khai. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử 0.5.0 → 0.6.0 giữ cả tiến độ hội thoại và từ vựng sau khi mở lại. Build trên máy khác cần chuyển đúng khóa ký cũ nếu muốn cài đè APK hiện tại; chỉ pull source không bao gồm khóa. Chi tiết: [báo cáo bài học và màn hình S9+](docs/lesson-quality-report.md).
 
 ## Nhận diện, giọng đọc và dữ liệu
 
@@ -75,7 +78,7 @@ Unit tests bao phủ nội dung, đáp án, khôi phục, ghi lỗi, đọc lỗ
 
 Robolectric kiểm tra được tương tác Compose nhưng không thay cho thử giọng nói thực tế. Checklist thủ công: [android-manual-checklist.md](docs/testing/android-manual-checklist.md).
 
-Kết quả đã xác minh cho bản 0.5.0: **89/89 test JVM/Robolectric, 27/27 test trên emulator API35 ở360×740 đạt; build APK thành công; lint 0 lỗi /16 cảnh báo có sẵn**. Gồm viewport nhỏ/chữ lớn, trạng thái gợi ý/đang học/học lại, cùng toàn bộ hồi quy45bài/Vocabulary300 và phục hồi micro API28/35. Đã xem ảnh nhiều màn ở font1.0/2.0. Chưa kiểm chứng micro thật trên Galaxy S9+; không suy diễn chất lượng nhận diện từ test UI. Chi tiết: [báo cáo giao diện](docs/modern-ui-report.md).
+Kết quả 0.6.0: **108/108 JVM/Robolectric, 39/39 Android 10/API29 và 39/39 Android 15/API35 đạt**, lint 0 lỗi/16 cảnh báo có sẵn, APK build thành công. Có ca chạy `MainActivity` thật để kiểm tra vùng bàn phím; thêm kiểm tra chữ lớn, thông báo lỗi dài và cài đè giữ tiến độ. Chi tiết trong [báo cáo bài học và màn hình S9+](docs/lesson-quality-report.md). Chưa có Galaxy S9+ thật kết nối; AVD không thay thế kiểm chứng Samsung Keyboard, TalkBack hay chất lượng nhận diện trên điện thoại.
 
 ## Cấu trúc
 

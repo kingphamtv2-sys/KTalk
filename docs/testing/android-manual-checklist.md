@@ -2,7 +2,7 @@
 
 Chỉ đánh dấu khi đã chạy thật. Unit test và build APK không thay thế kiểm chứng micro, TTS hoặc bố cục trên điện thoại.
 
-Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. Chưa có điện thoại thật. Test tự động dùng adapter âm thanh giả cho các luồng không cần micro; không đánh dấu các mục chất lượng âm thanh từ kết quả UI test.
+Thiết bị/API: AVD KTalkS9Api29 (Android 10/API29) và NoiTest35 (Android 15/API35), Google APIs. Khung1080×2220/480dpi=360×740dp theo tỷ lệ S9+, thêm540dpi≈320×658dp; font1.0/1.3/2.0. Chưa có điện thoại thật. Test tự động dùng adapter âm thanh giả cho các luồng không cần micro; không đánh dấu các mục chất lượng âm thanh từ kết quả UI test.
 
 - [x] Cài APK debug và mở ứng dụng; bản 45 bài cài mới có tiến độ 0/45 (kiểm tra UI tự động).
 - [x] Cài đè bản 15 bài lên 45 bài vẫn giữ bài cũ đã hoàn thành: 1/15 → 1/45.
@@ -16,6 +16,10 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 - [ ] Thử bản0.4.1 trên Galaxy S9+ người dùng, ghi mã SR/SYS nếu lỗi tiếp diễn; chưa có thiết bị kết nối để kiểm chứng.
 - [x] Cài đè0.4.1 →0.5.0 giữ1/45bài và1 Đã nhớ/1 Cần ôn qua đóng/mở lại.
 - [x] Xem ảnh giao diện mới trên360×740, font1.0/2.0; thẻ từ, quiz, bài học, tiến độ, hội thoại; kiểm tra nút chữ lớn và ô tìm sau rà soát.
+- [x] Cài đè APK cuối0.5.0 →0.6.0 giữ1/45 bài và1 Đã nhớ/1 Cần ôn sau force-stop/mở lại; cùng chứng thư ký.
+- [x] `MainActivity` thật nhận IME insets, không đẩy cả cửa sổ lên; kiểm tra bàn phím trên API29/35.
+- [x] Tạm tắt Google TTS trên AVD, mở lỗi dài + bàn phím ở320dp/font2, nhập/gửi câu trả lời và đóng thông báo; bật lại engine, khôi phục cấu hình.
+- [x] Xem ảnh bài học có mục tiêu/vai, lễ tân, kết thúc bài, chữ lớn và nhãn tab Học; rà soát độc lập45bài/180lượt.
 - [ ] Mở thủ công đủ 15 chủ đề, 45 bài; từ vựng và hội thoại khác nhau theo từng bài (cấu trúc/đáp án của tất cả bài đã kiểm tra tự động).
 - [ ] Từ chối quyền micro, hoàn thành một bài bằng chọn/gõ.
 - [ ] Từ chối quyền vĩnh viễn, mở cài đặt rồi quay lại và thử nói.
@@ -32,4 +36,4 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 
 ## Tự động
 
-89 test JVM/Robolectric và27 test emulator API35/360×740 đạt cho0.5.0. Gồm viewport nhỏ/chữ lớn, gợi ý đúng bài, nhãn Đang học/Học lại và toàn bộ hồi quy45bài/Vocabulary300/micro/IME/ActivityResult. Lint0 lỗi/16 cảnh báo có sẵn; APK build thành công. Test giả lập/ActivityMonitor không kiểm chứng chất lượng nhận diện/TTS bằng giọng nói thật.
+108 test JVM/Robolectric,39 test API29 và39 test API35 đạt cho0.6.0. Gồm nội dung/ID45bài/Vocabulary300, tên Việt, nhánh trả lời nhất quán, sửa văn bản rỗng, gõ/IME, thông báo lỗi cùng bàn phím, Activity thật và các hồi quy micro/ActivityResult. Lint0 lỗi/16 cảnh báo có sẵn; APK build thành công. [Báo cáo](../lesson-quality-report.md). Giả lập không kiểm chứng chất lượng nhận diện/TTS bằng giọng nói thật hay Samsung Keyboard/TalkBack trên S9+ thật.

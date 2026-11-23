@@ -1,23 +1,23 @@
 package vn.noi.english.content
 
-/** Intentionally unsuitable answers, authored for each prompt rather than one giveaway option. */
+/** Grammatical replies which miss the question or contradict its stated context. */
 internal object Distractors {
     private val byLesson = mapOf(
-        "greetings-morning" to listOf("Good night!", "It is twenty dollars.", "Yes, it does.", "I am twenty years old."),
-        "greetings-wellbeing" to listOf("My name is Monday.", "Yes, it is tomorrow.", "I am a break.", "See you yesterday!"),
-        "greetings-meeting" to listOf("Hello! My is name Linh.", "Nice to price you!", "Yes, I do new.", "How much is this seat?"),
-        "introductions-name" to listOf("My name are Linh.", "How much is your name?", "Yes, they are.", "You're welcome me."),
-        "introductions-country" to listOf("I am from a student.", "I live on Vietnamese.", "No, Vietnam is in Europe.", "What do you from?"),
-        "introductions-work" to listOf("I am twenty dollars.", "Yes, I am English.", "I study on the evening.", "Where do you job?"),
-        "food-drink" to listOf("A menu to wear, please.", "Medium size, please.", "Two left turns, please.", "I live near this cafe."),
-        "food-meal" to listOf("Can I wear the menu?", "I would chicken like rice.", "Turn right, please.", "A different shirt, please."),
-        "food-bill" to listOf("My meal is from Hanoi.", "Can I have the size, please?", "By foot, please.", "Yes, I am a receipt."),
-        "shopping-price" to listOf("I like this yesterday.", "How many is this T-shirt?", "It is on the right.", "Yes, I am looking yesterday."),
-        "shopping-size" to listOf("I need twenty dollars size.", "Yes, turn it left.", "It fits yesterday.", "The station, thank you."),
-        "shopping-buy" to listOf("I'll takes it.", "Tomorrow, please.", "By walk, please.", "Thank your goodbye."),
-        "directions-place" to listOf("Yes, I am a place.", "I'd like the bill, please.", "How much is near here?", "Yes, I walk can."),
-        "directions-route" to listOf("Yes, how many is the bank?", "Go sugar.", "Turn right.", "On the expensive."),
-        "directions-confirm" to listOf("Could you receipt that, please?", "It is inside the coffee.", "Is it a five-dollar walk?", "Thank you for your price.")
+        "greetings-morning" to listOf("Good night!", "My name is Linh.", "I'm from Vietnam.", "How old are you?"),
+        "greetings-wellbeing" to listOf("I'm a student.", "My class starts tomorrow.", "My break starts at twelve.", "I arrived at nine."),
+        "greetings-meeting" to listOf("How much is this shirt?", "The class starts at eight.", "I study in the evening.", "I'm from Hanoi."),
+        "introductions-name" to listOf("I'm from Vietnam.", "What's your phone number?", "I'm twenty years old.", "My name is Mai."),
+        "introductions-country" to listOf("I'm twenty years old.", "I work in the evening.", "No, Vietnam is in Europe.", "What do you do?"),
+        "introductions-work" to listOf("I start work at nine.", "My classroom is upstairs.", "I study at the library.", "Where do you live?"),
+        "food-drink" to listOf("The bill, please.", "A large cup, please.", "At nine o'clock, please.", "The cafe opens at eight."),
+        "food-meal" to listOf("A table for tomorrow, please.", "At twelve o'clock, please.", "A table by the window, please.", "My shirt is too small."),
+        "food-bill" to listOf("I arrived at noon.", "What time do you open tomorrow?", "On the table, please.", "I paid by card."),
+        "shopping-price" to listOf("I came here by bus.", "What time is it?", "The shop opens at ten.", "I wear a medium."),
+        "shopping-size" to listOf("Blue, please.", "I came here yesterday.", "It costs twenty dollars.", "By card, please."),
+        "shopping-buy" to listOf("I live near this shop.", "Medium, please.", "In the shopping bag, please.", "What time does class start?"),
+        "directions-place" to listOf("The station opens at six.", "At ten o'clock, please.", "My class starts at eight.", "I have two tickets."),
+        "directions-route" to listOf("The bank closes at five.", "Turn left first.", "Turn right.", "On the left."),
+        "directions-confirm" to listOf("What time does the park close?", "It's next to the station.", "The museum closes at six.", "How much is this shirt?")
     )
     fun forTurn(lessonId: String, turnIndex: Int): String = byLesson.getValue(lessonId)[turnIndex]
 }

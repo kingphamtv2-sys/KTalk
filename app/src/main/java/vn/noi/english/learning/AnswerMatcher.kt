@@ -20,7 +20,7 @@ object AnswerMatcher {
         }
     }
 
-    private val reservedNameWords = setOf("i", "am", "is", "are", "a", "an", "the", "my", "name", "from", "in", "live", "student", "teacher", "engineer", "worker", "fine", "good", "ready", "yes", "thank", "thanks", "you", "your")
+    private val reservedNameWords = setOf("i", "am", "is", "are", "a", "the", "my", "name", "from", "in", "live", "student", "teacher", "engineer", "worker", "fine", "good", "ready", "yes", "thank", "thanks", "you", "your")
 
     private val contractions = mapOf(
         "i'm" to "i am", "i'd" to "i would", "it's" to "it is", "that's" to "that is",

@@ -14,6 +14,8 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 - [x] Micro adapter thật trên emulator: nhận no-match7 sau ready, thông báo đúng, gõ vẫn kiểm tra được; không thử bằng giọng thật.
 - [x] Hộp thoại Android provider thật mở en-US, Back trả trạng thái hủy/Idle, không tự bật lại và vẫn thấy các nút phục hồi.
 - [ ] Thử bản0.4.1 trên Galaxy S9+ người dùng, ghi mã SR/SYS nếu lỗi tiếp diễn; chưa có thiết bị kết nối để kiểm chứng.
+- [x] Cài đè0.4.1 →0.5.0 giữ1/45bài và1 Đã nhớ/1 Cần ôn qua đóng/mở lại.
+- [x] Xem ảnh giao diện mới trên360×740, font1.0/2.0; thẻ từ, quiz, bài học, tiến độ, hội thoại; kiểm tra nút chữ lớn và ô tìm sau rà soát.
 - [ ] Mở thủ công đủ 15 chủ đề, 45 bài; từ vựng và hội thoại khác nhau theo từng bài (cấu trúc/đáp án của tất cả bài đã kiểm tra tự động).
 - [ ] Từ chối quyền micro, hoàn thành một bài bằng chọn/gõ.
 - [ ] Từ chối quyền vĩnh viễn, mở cài đặt rồi quay lại và thử nói.
@@ -30,4 +32,4 @@ Thiết bị/API: emulator NoiTest35, Google APIs Android 15 / API 35, Pixel 6. 
 
 ## Tự động
 
-84 test JVM/Robolectric và22 test emulator đạt cho0.4.1. Giữ hồi quy45bài/Vocabulary300; thêm nhận diện trên API28/35, timeout/cancel/stale callbacks, hệ mã lỗi native và activity riêng, launch guard foreground, UI Preparing/chữ lớn, ActivityResult trên MainActivity thật. Lint0 lỗi/16 cảnh báo; APK build thành công. Chi tiết trong README và báo cáo phục hồi micro. Test giả lập/ActivityMonitor không kiểm chứng chất lượng nhận diện/TTS bằng giọng nói thật.
+89 test JVM/Robolectric và27 test emulator API35/360×740 đạt cho0.5.0. Gồm viewport nhỏ/chữ lớn, gợi ý đúng bài, nhãn Đang học/Học lại và toàn bộ hồi quy45bài/Vocabulary300/micro/IME/ActivityResult. Lint0 lỗi/16 cảnh báo có sẵn; APK build thành công. Test giả lập/ActivityMonitor không kiểm chứng chất lượng nhận diện/TTS bằng giọng nói thật.

@@ -3,6 +3,10 @@ package vn.noi.english.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -29,7 +33,7 @@ class LearningFlowTest {
     private var audioStops = 0
     private fun launch(fontScale: Float = 1f, initial: Progress = Progress(), conversationReadFails: Boolean = false, vocabularyReadFails: Boolean = false,
                        wordWriteGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null, wordWriteFails: Boolean = false,
-                       systemSpeech: (() -> Unit)? = null, speechSettings: (() -> Unit)? = null): LearningViewModel {
+                       systemSpeech: (() -> Unit)? = null, speechSettings: (() -> Unit)? = null, compact: Boolean = false): LearningViewModel {
         val repo = object : ProgressRepository {
             val saved = MutableStateFlow(initial)
             override val progress = kotlinx.coroutines.flow.flow {
@@ -72,8 +76,12 @@ class LearningFlowTest {
         compose.setContent {
             val currentDensity = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(currentDensity.density, fontScale)) {
-                NoiTheme { NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}, vocabulary,
-                    onSystemSpeech = systemSpeech, openSpeechSettings = speechSettings) }
+                NoiTheme {
+                    Box(if (compact) Modifier.requiredSize(360.dp, 680.dp) else Modifier) {
+                        NoiApp(vm, input, output, { vm.message("Bạn chưa cấp quyền micro. Hãy chọn hoặc gõ để tiếp tục.") }, {}, vocabulary,
+                            onSystemSpeech = systemSpeech, openSpeechSettings = speechSettings)
+                    }
+                }
             }
         }
         compose.waitUntil(5_000) { !vm.state.value.loading }
@@ -312,5 +320,58 @@ class LearningFlowTest {
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNodeWithText("Kiểm tra câu trả lời").performScrollTo().performClick()
         compose.onNodeWithText("✓ Câu trả lời phù hợp!").assertExists()
+    }
+    @Test fun compactConversationKeepsMicrophoneVisibleWithGuidanceEnabled() {
+        launch(compact = true)
+        compose.runOnIdle { voiceStatus.value = VoiceState.Ready }
+        compose.onNodeWithText("Bắt đầu học").performScrollTo().performClick()
+        compose.onNodeWithText("Bắt đầu hội thoại").performScrollTo().performClick()
+        compose.onNodeWithText("Good morning!").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Bắt đầu nói").assertIsDisplayed()
+        val micBounds = compose.onNodeWithContentDescription("Bắt đầu nói").getUnclippedBoundsInRoot()
+        val viewport = compose.onNodeWithTag("screen-content").getBoundsInRoot()
+        org.junit.Assert.assertTrue("Microphone $micBounds must fit entirely in $viewport", micBounds.bottom <= viewport.bottom && micBounds.top >= viewport.top)
+        compose.onNodeWithText("Chào lại bằng Good morning.").assertExists()
+        compose.onNodeWithText("Ẩn").performScrollTo().performClick()
+        compose.onNodeWithText("Ví dụ: Good morning!").assertDoesNotExist()
+        compose.onNodeWithText("Hiện").performClick()
+        compose.onNodeWithText("Nghe câu mẫu").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun compactLargeTextVocabularyCanRevealHearAndSaveExpandedWord() {
+        launch(fontScale = 2f, compact = true)
+        compose.onNodeWithText("Từ vựng").performClick()
+        compose.onNodeWithTag("vocabulary-search").performTextInput("raincoat")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Học thẻ từ").performScrollTo().performClick()
+        compose.onNodeWithText("Xem nghĩa").performScrollTo().performClick()
+        compose.onNodeWithText("I need a raincoat.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Nghe ví dụ").performScrollTo().performClick()
+        compose.onNodeWithText("Đã hiểu").performClick()
+        compose.onNodeWithText("Cần ôn").performScrollTo().assertIsDisplayed().performClick()
+        compose.waitUntil(5_000) { vocabulary.state.value.page == VocabularyPage.CardsDone }
+        compose.onNodeWithText("Về từ vựng").performScrollTo().performClick()
+        compose.onNodeWithTag("known-word-count").performScrollTo().assertTextEquals("0 / 1 đã nhớ")
+        compose.runOnIdle { org.junit.Assert.assertEquals(1, vocabulary.state.value.progress.review.size) }
+    }
+    @Test fun homeSuggestionDoesNotPromoteACompletedReplayAsANewLesson() {
+        val vm = launch(initial = Progress(setOf("greetings-morning"), "greetings-morning", 2))
+        compose.onNodeWithText("Hỏi thăm đơn giản").assertExists()
+        compose.onNodeWithText("Bắt đầu học").performScrollTo().performClick()
+        compose.runOnIdle { org.junit.Assert.assertEquals("greetings-wellbeing", vm.state.value.lessonId) }
+    }
+    @Test fun allCompletedLessonsHaveAnExplicitReplayActionAndKeepCompletionCount() {
+        val completed = vn.noi.english.content.Curriculum.lessons.map { it.id }.toSet()
+        val vm = launch(initial = Progress(completed, completed.last(), 2))
+        compose.onNodeWithText("45 / 45 bài").assertExists()
+        compose.onNodeWithText("Học lại").performScrollTo().performClick()
+        compose.runOnIdle {
+            org.junit.Assert.assertEquals(Screen.Vocabulary, vm.state.value.screen)
+            org.junit.Assert.assertEquals(45, vm.state.value.progress.completedLessonIds.size)
+        }
+    }
+    @Test fun activeTopicWithZeroCompletionsShowsLearningInsteadOfUnstarted() {
+        launch(initial = Progress(lessonId = "greetings-morning", turnIndex = 1))
+        compose.onNodeWithText("Tiếp tục học").assertExists()
+        compose.onNode(hasText("Chào hỏi") and hasClickAction()).assert(hasText("Đang học · 0 / 3 bài hoàn thành"))
     }
 }

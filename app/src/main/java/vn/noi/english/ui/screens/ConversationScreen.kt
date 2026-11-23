@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,19 +29,25 @@ import vn.noi.english.ui.theme.*
     val lesson = state.lesson ?: return
     val turn = state.turn ?: return
     var hint by rememberSaveable(lesson.id, state.turnIndex) { mutableStateOf(true) }
-    Page {
+    Page(spacing = 10.dp) {
         BackHeader("Lượt ${state.turnIndex + 1} / 4", onBack)
-        Eyebrow(state.topic.title)
-        Muted(lesson.title)
-        ProgressTrack((state.turnIndex + 1) / 4f, "Đang luyện lượt ${state.turnIndex + 1} trong 4 lượt")
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Surface(color = Color(0xFFDCE6F5), shape = CircleShape) { Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) { Text("A", color = Navy) } }
-            Column { Text("Alex", style = MaterialTheme.typography.titleMedium); Text("Cùng bạn luyện tập", style = MaterialTheme.typography.bodySmall, color = Subtle) }
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(lesson.title, style = MaterialTheme.typography.titleMedium)
+            Text(state.topic.title, style = MaterialTheme.typography.bodySmall, color = Subtle)
         }
+        LinearProgressIndicator(progress = { (state.turnIndex + 1) / 4f }, modifier = Modifier.fillMaxWidth().height(4.dp)
+            .semantics { contentDescription = "Đang luyện lượt ${state.turnIndex + 1} trong 4 lượt" }, color = Blue, trackColor = Line, drawStopIndicator = {})
         Panel {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Surface(color = BlueTint, shape = CircleShape) { Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) { Text("A", style = MaterialTheme.typography.titleMedium, color = Blue) } }
+                Column(Modifier.weight(1f)) {
+                    Text("Alex", style = MaterialTheme.typography.labelMedium)
+                    Text("Cùng bạn luyện tập", style = MaterialTheme.typography.bodySmall, color = Subtle)
+                }
+                FilledTonalIconButton({ onSpeak(turn.prompt) }, Modifier.size(48.dp)) { Icon(Icons.AutoMirrored.Outlined.VolumeUp, "Nghe câu hỏi") }
+            }
             Text(turn.prompt, style = MaterialTheme.typography.headlineMedium)
             Muted(turn.translation)
-            AudioButton("Nghe câu hỏi") { onSpeak(turn.prompt) }
         }
         if (state.feedback == Feedback.Accepted) {
             Panel { Eyebrow("Câu trả lời của bạn"); Text(state.answer, style = MaterialTheme.typography.bodyLarge) }
@@ -52,23 +59,23 @@ import vn.noi.english.ui.theme.*
             MainButton(if (state.saving) "Đang lưu…" else if (state.turnIndex == 3) "Hoàn thành bài" else "Lượt tiếp theo", enabled = !state.saving, onClick = onNext)
             SecondaryButton("Thử nói lại", enabled = !state.saving, onClick = onRetry)
         } else {
-            if (state.feedback == Feedback.TryTemplate) Panel(Color(0xFFF6EEDF), false) {
+            if (state.feedback == Feedback.TryTemplate) Panel(Warm, false) {
                 Text("Thử theo gợi ý nhé", style = MaterialTheme.typography.titleMedium)
                 Text(turn.explanation)
                 Muted("Ứng dụng chỉ kiểm tra theo mẫu bài học. Bạn có thể thử lại bao nhiêu lần tùy thích.")
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Eyebrow("Gợi ý dành cho bạn")
-                TextButton({ hint = !hint }, enabled = !state.saving) { Text(if (hint) "Ẩn" else "Hiện") }
+            Surface(Modifier.fillMaxWidth(), color = BlueTint, shape = RoundedCornerShape(16.dp)) {
+                Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("Gợi ý dành cho bạn", style = MaterialTheme.typography.labelSmall, color = Blue)
+                        if (hint) Text(turn.hint, style = MaterialTheme.typography.bodyMedium, color = Ink)
+                    }
+                    TextButton({ hint = !hint }, enabled = !state.saving) { Text(if (hint) "Ẩn" else "Hiện") }
+                }
             }
-            if (hint) Panel(Color(0xFFEEF2FA), false) {
-                Text(turn.hint, style = MaterialTheme.typography.titleMedium)
-                Text("Ví dụ: ${turn.sample}", style = MaterialTheme.typography.bodySmall, color = Subtle)
-                AudioButton("Nghe câu mẫu") { onSpeak(turn.sample) }
-            }
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().heightIn(min = 48.dp).height(IntrinsicSize.Min)) {
                 AnswerMode.entries.forEachIndexed { index, mode ->
-                    SegmentedButton(selected = state.mode == mode, onClick = { onMode(mode) }, enabled = !state.saving,
+                    SegmentedButton(selected = state.mode == mode, onClick = { onMode(mode) }, enabled = !state.saving, modifier = Modifier.fillMaxHeight(),
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = 3), icon = {}) {
                         Text(when(mode) { AnswerMode.Speak -> "Nói"; AnswerMode.Choose -> "Chọn câu"; AnswerMode.Type -> "Gõ" })
                     }
@@ -80,24 +87,29 @@ import vn.noi.english.ui.theme.*
                         OutlinedTextField(state.answer, onAnswer, Modifier.fillMaxWidth().testTag("answer-input"), label = { Text("Ứng dụng nghe được · Có thể sửa") }, shape = RoundedCornerShape(12.dp))
                         MainButton("Kiểm tra câu trả lời", !state.saving, onSubmit)
                         SecondaryButton("Nói lại", !state.saving, onRetry)
-                    } else Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Spacer(Modifier.height(6.dp))
-                        Surface(color = Color(0xFFE8EDFC), shape = CircleShape) {
-                            IconButton(onClick = if (state.audioPhase == AudioPhase.Listening) onStop else onMicrophone,
-                                enabled = !state.saving && state.audioPhase in listOf(AudioPhase.Idle, AudioPhase.Listening),
-                                modifier = Modifier.padding(8.dp).size(76.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = Blue, contentColor = Color.White)) {
-                                Icon(if (state.audioPhase == AudioPhase.Listening) Icons.Outlined.Stop else Icons.Outlined.Mic,
-                                    if (state.audioPhase == AudioPhase.Listening) "Dừng nói" else "Bắt đầu nói", Modifier.size(28.dp))
+                    } else Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Surface(color = CardWhite, shape = RoundedCornerShape(24.dp), border = BorderStroke(1.dp, Line)) {
+                            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Surface(color = BlueTint, shape = CircleShape) {
+                                    IconButton(onClick = if (state.audioPhase == AudioPhase.Listening) onStop else onMicrophone,
+                                        enabled = !state.saving && state.audioPhase in listOf(AudioPhase.Idle, AudioPhase.Listening),
+                                        modifier = Modifier.padding(6.dp).size(64.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = if (state.audioPhase == AudioPhase.Listening) Teal else Blue, contentColor = Color.White)) {
+                                        Icon(if (state.audioPhase == AudioPhase.Listening) Icons.Outlined.Stop else Icons.Outlined.Mic,
+                                            if (state.audioPhase == AudioPhase.Listening) "Dừng nói" else "Bắt đầu nói", Modifier.size(28.dp))
+                                    }
+                                }
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(when(state.audioPhase) { AudioPhase.Idle -> "Chạm để bắt đầu nói"; AudioPhase.Preparing -> "Đang mở micro…"; AudioPhase.Listening -> "Đang nghe… Chạm để dừng"; AudioPhase.Processing -> "Đang nhận diện…" }, style = MaterialTheme.typography.titleMedium)
+                                    Text("Cứ nói chậm thôi. Bạn có thể thử lại.", style = MaterialTheme.typography.bodySmall, color = Subtle)
+                                }
                             }
                         }
-                        Text(when(state.audioPhase) { AudioPhase.Idle -> "Chạm để bắt đầu nói"; AudioPhase.Preparing -> "Đang mở micro…"; AudioPhase.Listening -> "Đang nghe… Chạm để dừng"; AudioPhase.Processing -> "Đang nhận diện…" }, style = MaterialTheme.typography.titleMedium)
-                        Muted("Cứ nói chậm thôi. Bạn có thể thử lại.")
                         if (onSystemSpeech != null) TextButton(onSystemSpeech, enabled = !state.saving && state.audioPhase == AudioPhase.Idle) { Text("Nhận diện bằng Android") }
                         if (state.message != null && openSpeechSettings != null) TextButton(openSpeechSettings, enabled = !state.saving && state.audioPhase == AudioPhase.Idle) { Text("Cài đặt nhận diện") }
                     }
                 }
                 AnswerMode.Choose -> turn.choices.forEach { choice ->
-                    OutlinedButton(onClick = { onAnswer(choice); onSubmit() }, Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFCAD7E9)), contentPadding = PaddingValues(16.dp)) {
+                    OutlinedButton(onClick = { onAnswer(choice); onSubmit() }, Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, Line), contentPadding = PaddingValues(16.dp), colors = ButtonDefaults.outlinedButtonColors(containerColor = CardWhite)) {
                         Text(choice, Modifier.fillMaxWidth(), color = Ink)
                     }
                 }
@@ -105,6 +117,10 @@ import vn.noi.english.ui.theme.*
                     OutlinedTextField(state.answer, onAnswer, Modifier.fillMaxWidth().testTag("answer-input"), label = { Text("Câu trả lời của bạn") }, placeholder = { Text("Nhập câu tiếng Anh…") }, shape = RoundedCornerShape(12.dp))
                     MainButton("Kiểm tra câu trả lời", !state.saving, onSubmit)
                 }
+            }
+            if (hint) Panel(BlueTint, false) {
+                Text("Ví dụ: ${turn.sample}", style = MaterialTheme.typography.bodyLarge)
+                AudioButton("Nghe câu mẫu") { onSpeak(turn.sample) }
             }
         }
         Spacer(Modifier.height(12.dp))

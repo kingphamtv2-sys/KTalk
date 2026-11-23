@@ -1,6 +1,8 @@
 # KTalk — Tiếng Anh giao tiếp cho người Việt
 
-Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem biểu tượng](docs/design/ktalk-icon.png). APK **0.4.1 — sửa phục hồi micro**, giữ 45 bài và 300 mục từ vựng: [KTalk-0.4.1-microphone-fix.apk](releases/KTalk-0.4.1-microphone-fix.apk).
+Phiên bản **0.5.0 — giao diện mới**, giữ 45 bài và 300 mục từ vựng. Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh lam. [Xem giao diện](docs/testing/screenshots/modern-home.png) · [Báo cáo nghiệm thu](docs/modern-ui-report.md).
+
+APK bàn giao riêng tại `releases/KTalk-0.5.0-modern-ui.apk` trên máy triển khai; file APK không lưu trong Git. Khi clone source sang máy khác, dùng hướng dẫn Build bên dưới.
 
 Ứng dụng Android Kotlin / Jetpack Compose theo [thiết kế đã duyệt](docs/superpowers/specs/2026-11-19-english-android-design.md), giao diện nền sáng, xanh mực và xanh lam. Android 8.0 (API 26) trở lên.
 
@@ -16,6 +18,7 @@ Biểu tượng KTalk: chữ **K** trong bong bóng hội thoại, nền xanh la
 - Tìm theo tiếng Anh hoặc nghĩa Việt, hỗ trợ tiếng Việt không dấu; kết hợp bộ lọc chủ đề hoặc chỉ ôn các từ cần nhớ. Mỗi lượt tối đa 10 thẻ, ưu tiên từ Cần ôn rồi Chưa học.
 - **Kiểm tra nhanh** tối đa 5 câu, mỗi câu 4 lựa chọn nghĩa tiếng Việt; ưu tiên từ cần ôn và chưa học. Quiz chỉ tính điểm của lượt hiện tại, không tự đổi mức nhớ.
 - Không cần tài khoản, API key hoặc backend; chưa có trò chuyện AI tự do hoặc chấm phát âm.
+- Giao diện sáng mới: card bài học/chủ đề, thẻ từ và quiz đồng bộ, micro gọn gần câu hỏi, nút tự thích ứng cỡ chữ lớn. Trạng thái Đang học/Học lại phản ánh tiến độ thực tế, không tạo streak/XP giả.
 
 ## Build
 
@@ -45,7 +48,7 @@ adb shell am start -n vn.noi.english/.MainActivity
 
 Đây là bản debug để thử nghiệm, chưa phải gói phát hành Play Store.
 
-Bản 0.4.1 dùng cùng package và chữ ký debug với bản cũ. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử 0.4.0 → 0.4.1 giữ cả tiến độ hội thoại và từ vựng sau khi mở lại. Chi tiết: [báo cáo phục hồi micro](docs/microphone-recovery-report.md); [báo cáo mở rộng 300 từ](docs/vocabulary-expansion-report.md).
+Bản 0.5.0 dùng cùng package và chữ ký debug với bản cũ trên máy triển khai. Có thể **cài cập nhật trực tiếp, không gỡ bản cũ** để giữ tiến độ. Đã thử 0.4.1 → 0.5.0 giữ cả tiến độ hội thoại và từ vựng sau khi mở lại. Build trên máy khác cần chuyển đúng khóa ký cũ nếu muốn cài đè APK hiện tại; chỉ pull source không bao gồm khóa. Chi tiết: [báo cáo giao diện](docs/modern-ui-report.md), [báo cáo phục hồi micro](docs/microphone-recovery-report.md).
 
 ## Nhận diện, giọng đọc và dữ liệu
 
@@ -72,7 +75,7 @@ Unit tests bao phủ nội dung, đáp án, khôi phục, ghi lỗi, đọc lỗ
 
 Robolectric kiểm tra được tương tác Compose nhưng không thay cho thử giọng nói thực tế. Checklist thủ công: [android-manual-checklist.md](docs/testing/android-manual-checklist.md).
 
-Kết quả đã xác minh cho bản 0.4.1: **84/84 test JVM/Robolectric, 22/22 test trên emulator API 35 đạt; build APK thành công; lint 0 lỗi / 16 cảnh báo** (15 có sẵn và 1 gợi ý KTX tương tự). Test nhận diện chạy trên Robolectric API28 và35, gồm lỗi khởi động, timeout/cancel, intent/result hệ thống và launch guard. Giữ toàn bộ hồi quy 45 bài, danh mục300 và tính năng Vocabulary. Chưa kiểm chứng bằng micro thật trên Galaxy S9+; không khẳng định đã biết engine/mã lỗi của máy đó. Chi tiết: [báo cáo phục hồi micro](docs/microphone-recovery-report.md).
+Kết quả đã xác minh cho bản 0.5.0: **89/89 test JVM/Robolectric, 27/27 test trên emulator API35 ở360×740 đạt; build APK thành công; lint 0 lỗi /16 cảnh báo có sẵn**. Gồm viewport nhỏ/chữ lớn, trạng thái gợi ý/đang học/học lại, cùng toàn bộ hồi quy45bài/Vocabulary300 và phục hồi micro API28/35. Đã xem ảnh nhiều màn ở font1.0/2.0. Chưa kiểm chứng micro thật trên Galaxy S9+; không suy diễn chất lượng nhận diện từ test UI. Chi tiết: [báo cáo giao diện](docs/modern-ui-report.md).
 
 ## Cấu trúc
 

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import vn.noi.english.learning.LearningState
 import vn.noi.english.ui.components.*
 import vn.noi.english.ui.theme.*
@@ -19,9 +20,9 @@ import vn.noi.english.ui.theme.*
         BackHeader("Đã lưu tiến độ", onLessons)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Spacer(Modifier.height(16.dp))
-            Surface(color = Mint, shape = RoundedCornerShape(22.dp)) { Box(Modifier.size(76.dp), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Check, null, Modifier.size(36.dp), tint = Ink) } }
+            Surface(color = Mint, shape = RoundedCornerShape(28.dp)) { Box(Modifier.size(80.dp), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Check, null, Modifier.size(38.dp), tint = Teal) } }
             Eyebrow("Từng bước một")
-            ScreenHeading("Thêm một chút\ntự tin hôm nay.")
+            Text("Thêm một chút\ntự tin hôm nay.", style = MaterialTheme.typography.headlineLarge, color = Ink, textAlign = TextAlign.Center)
             Muted(lesson.title)
         }
         Panel {
